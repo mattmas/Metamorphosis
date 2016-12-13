@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>RevitFingerPrintDynamo</name>
+    </assembly>
+    <members>
+        <member name="M:RevitFingerPrintDynamo.FingerPrint.Snapshot(System.String)">
+            <summary>
+            Creates a snapshot file of the current model
+            </summary>
+            <param name="filename">OPTIONAL: Specify the snapshot filename</param>
+            <returns>The snapshot filename</returns>
+        </member>
+    </members>
+</doc>
