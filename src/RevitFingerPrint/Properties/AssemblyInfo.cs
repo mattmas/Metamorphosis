@@ -7,7 +7,14 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyTitle("Metamorphosis")]
 [assembly: AssemblyDescription("")]
-[assembly: AssemblyConfiguration("")]
+
+#if REVIT2016
+[assembly: AssemblyConfiguration("Revit 2016")]
+#endif
+
+#if REVIT2017
+[assembly: AssemblyConfiguration("Revit 2017")]
+#endif 
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Metamorphosis")]
 [assembly: AssemblyCopyright("MNM, KM, CP, TH Copyright ©  2016")]

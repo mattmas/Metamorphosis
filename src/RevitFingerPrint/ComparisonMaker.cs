@@ -55,7 +55,7 @@ namespace Metamorphosis
             // make our comparisons
             return compareData();
 
-            
+
         }
 
         public void Serialize(string filename, IList<Change> changes)
@@ -63,7 +63,7 @@ namespace Metamorphosis
             System.IO.File.WriteAllText(filename, Serialize(changes));
         }
 
-        public string Serialize( IList<Change> changes)
+        public string Serialize(IList<Change> changes)
         {
             // build the change summary:
 
@@ -76,14 +76,14 @@ namespace Metamorphosis
             summary.Changes = changes;
             summary.ModelSummary = _categoryCount;
             summary.LevelNames = _allLevels.OrderBy(a => a.Elevation).Select(a => a.Name).ToList();
-            
+
 
             string result = Newtonsoft.Json.JsonConvert.SerializeObject(summary);
             //var serialize = new System.Web.Script.Serialization.JavaScriptSerializer();
             //string result = serialize.Serialize(summary);
 
             return result;
-             
+
         }
         #endregion
 
@@ -114,7 +114,7 @@ namespace Metamorphosis
             // now look for deleted items
             foreach (var previousPair in _idValues)
             {
-                if ( _currentElems.ContainsKey( previousPair.Key) == false)
+                if (_currentElems.ContainsKey(previousPair.Key) == false)
                 {
                     if (!AllCategories && (_requestedCategoryNames.Contains(previousPair.Value.Category) == false)) continue; // do not include
                     changes.Add(buildDeleted(previousPair.Value));
@@ -123,11 +123,11 @@ namespace Metamorphosis
 
             return changes;
         }
-        
+
         private Change buildDeleted(RevitElement element)
         {
             Change c = new Change() { ElementId = element.ElementId, Category = element.Category, ChangeType = Change.ChangeTypeEnum.DeletedElement,
-                                        Level = (element.Level != null) ? element.Level:"", IsType = element.IsType};
+                Level = (element.Level != null) ? element.Level : "", IsType = element.IsType };
             c.BoundingBoxDescription = Utilities.RevitUtils.SerializeBoundingBox(element.BoundingBox);
             return c;
         }
@@ -150,9 +150,9 @@ namespace Metamorphosis
         {
             Element e = _doc.GetElement(new ElementId(current.ElementId));
 
-            Change c = new Change() { ElementId = current.ElementId, UniqueId = e.UniqueId, Category = current.Category, ChangeType = Change.ChangeTypeEnum.NewElement, Level = (current.Level != null) ? current.Level:"", IsType = current.IsType };
+            Change c = new Change() { ElementId = current.ElementId, UniqueId = e.UniqueId, Category = current.Category, ChangeType = Change.ChangeTypeEnum.NewElement, Level = (current.Level != null) ? current.Level : "", IsType = current.IsType };
             c.BoundingBoxDescription = Utilities.RevitUtils.SerializeBoundingBox(current.BoundingBox);
-            
+
             return c;
         }
 
@@ -160,9 +160,9 @@ namespace Metamorphosis
         {
             StringBuilder description = null;
             int numParmsChanged = 0;
-            foreach( var pair in current.Parameters )
+            foreach (var pair in current.Parameters)
             {
-                if (previous.Parameters.ContainsKey( pair.Key ))
+                if (previous.Parameters.ContainsKey(pair.Key))
                 {
                     // test if they match
                     if (current.Parameters[pair.Key] != previous.Parameters[pair.Key])
@@ -171,12 +171,12 @@ namespace Metamorphosis
                         numParmsChanged++;
                         if (numParmsChanged > 1) description.Append(", ");
                         description.Append(pair.Key + " From: " + previous.Parameters[pair.Key] + " to " + current.Parameters[pair.Key]);
-                        
+
                     }
 
                 }
             }
-            if (numParmsChanged >0)
+            if (numParmsChanged > 0)
             {
                 Element e = _doc.GetElement(new ElementId(current.ElementId));
                 Change c = new Change()
@@ -186,7 +186,7 @@ namespace Metamorphosis
                     Category = (e.Category != null) ? e.Category.Name : "(none)",
                     ChangeType = Change.ChangeTypeEnum.ParameterChange,
                     ChangeDescription = description.ToString(),
-                    Level = (current.Level != null) ? current.Level:"",
+                    Level = (current.Level != null) ? current.Level : "",
                     IsType = current.IsType
                 };
                 c.BoundingBoxDescription = Utilities.RevitUtils.SerializeBoundingBox(current.BoundingBox);
@@ -201,38 +201,52 @@ namespace Metamorphosis
         {
             // try to do a comparison based on bounding boxes and locations...
             // this is CERTAINLY imperfect
-            
+
             double tolerance = 0.0006;  // decimal feet - 1/128"?
 
             double dist = -1;
 
-            if ((current.LocationPoint != null) && (previous.LocationPoint != null))
+            if (didMove(current.LocationPoint, previous.LocationPoint, tolerance, out dist))
             {
-                dist = current.LocationPoint.DistanceTo(previous.LocationPoint);
-                if (dist > tolerance)
-                {
-                    Change c = new Change()
-                    {
-                        ChangeType = Change.ChangeTypeEnum.GeometryChange,
-                        Category = current.Category,
-                        ElementId = current.ElementId,
-                        UniqueId = current.UniqueId,
-                        ChangeDescription = "Location Offset " + dist + " ft."
-                    };
-                    if (current.BoundingBox != null) c.BoundingBoxDescription = Utilities.RevitUtils.SerializeBoundingBox(current.BoundingBox);
 
-                    return c;
+                Change c = new Change()
+                {
+                    ChangeType = Change.ChangeTypeEnum.Move,
+                    Category = current.Category,
+                    ElementId = current.ElementId,
+                    UniqueId = current.UniqueId,
+                    ChangeDescription = "Location Offset " + dist + " ft."
+                };
+                if (current.BoundingBox != null) c.BoundingBoxDescription = Utilities.RevitUtils.SerializeBoundingBox(current.BoundingBox);
+
+                // we want to check if the LocationPoint2 also moved?
+                if ((current.LocationPoint2 != null) && (previous.LocationPoint2 != null) &&
+                    (didMove(current.LocationPoint2, previous.LocationPoint2, tolerance, out dist)))
+                {
+
+                    // both moved. record both.
+                    c.MoveDescription = Utilities.RevitUtils.SerializeDoubleMove(previous.LocationPoint, current.LocationPoint,
+                                                                                  previous.LocationPoint2, current.LocationPoint2);
+
                 }
+                else
+                {
+                    // single move.
+                    c.MoveDescription = Utilities.RevitUtils.SerializeMove(previous.LocationPoint, current.LocationPoint);
+                }
+
+                return c;
+
             }
 
-            if ((current.LocationPoint2 != null) && (previous.LocationPoint2 != null))
+            // only a move of the second one...
+            if ((current.LocationPoint2 != null) && (previous.LocationPoint2 != null) && 
+                    didMove(previous.LocationPoint2, current.LocationPoint2, tolerance, out dist))
             {
-                dist = current.LocationPoint2.DistanceTo(previous.LocationPoint2);
-                if (dist > tolerance)
-                {
+                
                     Change c = new Change()
                     {
-                        ChangeType = Change.ChangeTypeEnum.GeometryChange,
+                        ChangeType = Change.ChangeTypeEnum.Move,
                         Category = current.Category,
                         ElementId = current.ElementId,
                         UniqueId = current.UniqueId,
@@ -240,8 +254,10 @@ namespace Metamorphosis
                     };
                     if (current.BoundingBox != null) c.BoundingBoxDescription = Utilities.RevitUtils.SerializeBoundingBox(current.BoundingBox);
 
+                // only one side moved though...
+                c.MoveDescription = Utilities.RevitUtils.SerializeMove(previous.LocationPoint2, current.LocationPoint2);
                     return c;
-                }
+                
             }
 
             // now the bounding box...
@@ -267,6 +283,21 @@ namespace Metamorphosis
 
             return null;
 
+        }
+
+        private bool didMove(XYZ oldPoint, XYZ newPoint, double tolerance, out double distance)
+        {
+            distance = -1;
+            if (newPoint == null) return false;
+            if (oldPoint == null) return false;
+
+            distance = newPoint.DistanceTo(oldPoint);
+            if (distance > tolerance)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private void readModel()

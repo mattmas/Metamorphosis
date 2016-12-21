@@ -11,7 +11,7 @@ namespace Metamorphosis.Objects
 {
     public class Change
     {
-        public enum ChangeTypeEnum { ParameterChange, GeometryChange, NewElement, DeletedElement }
+        public enum ChangeTypeEnum { ParameterChange, Move, GeometryChange, NewElement, DeletedElement }
         #region Properties
         public int ElementId { get; set; }
 
@@ -28,6 +28,8 @@ namespace Metamorphosis.Objects
         public string ChangeDescription { get; set; } = String.Empty;
 
         public Boolean IsType { get; set; } = false;
+
+        public string MoveDescription { get; set; }
         #endregion
 
         #region PublicMethods

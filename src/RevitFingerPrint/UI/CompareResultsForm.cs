@@ -20,10 +20,12 @@ namespace Metamorphosis.UI
         private EventHandler<IdlingEventArgs> _idleEvent;
         private bool _isResetting = false;
 
-        private enum ActionEnum { None,ShowElement, Shutdown, ColorElements, RemoveColor, ResetColors};
+        private enum ActionEnum { None,ShowElement, Shutdown, ColorElements, RemoveColor, ResetColors, ShowSolid, ShowMove, Select};
         private ActionEnum _action = ActionEnum.None;
         private ICollection<ElementId> _idsToShow;
         private Dictionary<int, bool> _viewsColored = new Dictionary<int, bool>();
+        private IList<Objects.Change> _selectedItems;
+        private TreeNode _rightClickedNode;
 
         public CompareResultsForm(UIDocument uiDoc, IList<Objects.Change> changes)
         {
@@ -76,6 +78,18 @@ namespace Metamorphosis.UI
                     case ActionEnum.ResetColors:
                         resetColors();
                         break;
+
+                    case ActionEnum.ShowSolid:
+                        performShowSolid();
+                        break;
+
+                    case ActionEnum.ShowMove:
+                        performShowMove();
+                        break;
+
+                    case ActionEnum.Select:
+                        performSelect();
+                        break;
                 }
             }
             catch (Exception ex)
@@ -88,7 +102,18 @@ namespace Metamorphosis.UI
 
         private void performShow()
         {
-            _uiDoc.ShowElements(_idsToShow);
+            List<ElementId> ids = new List<ElementId>();
+            foreach (var change in _selectedItems) ids.Add(new ElementId(change.ElementId));
+            
+            _uiDoc.ShowElements(ids);
+            _uiDoc.Selection.SetElementIds(ids);
+        }
+
+        private void performSelect()
+        {
+            List<ElementId> ids = new List<ElementId>();
+            foreach (var item in _selectedItems) ids.Add(new ElementId(item.ElementId));
+            _uiDoc.Selection.SetElementIds(ids);
         }
 
         private void performShutdown()
@@ -96,6 +121,79 @@ namespace Metamorphosis.UI
             _uiDoc.Application.Idling -= _idleEvent;
         }
 
+        private void performShowMove()
+        {
+
+            try
+            {
+                // try to show the move stuff.
+
+                // show the vectors, and zoom.
+                List<ElementId> ids = new List<ElementId>();
+                foreach (var change in _selectedItems) ids.Add(new ElementId(change.ElementId));
+
+                _uiDoc.ShowElements(ids);
+
+                // retrieve the points:
+                IList<Objects.VectorObject> vectors = lookupPoints(_selectedItems);
+                Utilities.AVFUtility.ShowVectors(_uiDoc.Document, vectors, true); 
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error while trying to show move: " + ex);
+            }
+
+        }
+        private void performShowSolid()
+        {
+            // maybe we don't need a transaction right here?
+
+            if (_selectedItems == null) return;
+            try
+            {
+                double xMin = 9999999; double xMax = -999999999; double yMin = 99999999; double yMax = -999999999; double zMin = 99999999; double zMax = -99999999;
+                List<Solid> solids = new List<Solid>();
+                List<double> values = new List<double>();
+                foreach (var item in _selectedItems)
+                {
+                    
+                        BoundingBoxXYZ box = Utilities.RevitUtils.DeserializeBoundingBox(item.BoundingBoxDescription);
+                        if (box != null)
+                        {
+                            Solid s = Utilities.RevitUtils.CreateSolidFromBox(_uiDoc.Application.Application, box);
+                        if (s != null)
+                        {
+                            solids.Add(s);
+                            values.Add(1.0);
+                        }
+                        // see if the box is bigger. If so, expand it.
+                        if (box.Min.X < xMin) xMin = box.Min.X;
+                        if (box.Min.Y < yMin) yMin = box.Min.Y;
+                        if (box.Min.Z < zMin) zMin = box.Min.Z;
+                        if (box.Max.X > xMax) xMax = box.Max.X;
+                        if (box.Max.Y > yMax) yMax = box.Max.Y;
+                        if (box.Max.Z > zMax) zMax = box.Max.Z;
+                            
+                        }
+                   
+                }
+                Utilities.AVFUtility.ShowSolids(_uiDoc.Document, solids, values);
+
+                UIView v = _uiDoc.GetOpenUIViews().FirstOrDefault();
+                if (v != null)
+                {
+                    BoundingBoxXYZ bigBox = new BoundingBoxXYZ() { Min = new XYZ(xMin, yMin, zMin), Max = new XYZ(xMax, yMax, zMax) };
+                    v.ZoomAndCenterRectangle(bigBox.Min, bigBox.Max);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                // swallow.
+                MessageBox.Show("Error: " + ex);
+            }
+        }
         private void performColor()
         {
             // we need to collect all of the element Ids
@@ -235,6 +333,7 @@ namespace Metamorphosis.UI
             }
 
             root.Expand();
+            treeView1.Sort();
         }
 
         private void renderByLevel()
@@ -259,6 +358,7 @@ namespace Metamorphosis.UI
                 {
                     TreeNode nextNode = new TreeNode(group2.Key);
                     nextNode.Text = nextNode.Text + "(" + group2.Value.Count + ")";
+                    
                     catNode.Nodes.Add(nextNode);
                     foreach (var item in group2.Value)
                     {
@@ -267,8 +367,10 @@ namespace Metamorphosis.UI
                         nextNode.Nodes.Add(itemNode);
                     }
                 }
+               
             }
 
+            treeView1.Sort();
             root.Expand();
         }
 
@@ -309,7 +411,8 @@ namespace Metamorphosis.UI
         {
             TreeNode itemNode = new TreeNode(item.Category + (item.IsType ? "Type":"") + ": " + item.ElementId + ": " + item.ChangeType);
             itemNode.ToolTipText = item.ChangeDescription;
-            if (item.ChangeType != Objects.Change.ChangeTypeEnum.DeletedElement) itemNode.Tag = item.ElementId;
+            itemNode.Tag = item;
+            
             if (item.IsType == false) itemNode.ForeColor = System.Drawing.Color.Blue;
 
             return itemNode;
@@ -320,11 +423,35 @@ namespace Metamorphosis.UI
         {
             if (e.Node.Tag != null)
             {
-                // we have an id?
-                int id = (int)e.Node.Tag;
+                Objects.Change item = e.Node.Tag as Objects.Change;
+                if (item != null)
+                {
+                    _selectedItems = new Objects.Change[] { item };
 
-                _idsToShow = new ElementId[] { new ElementId(id) };
-                _action = ActionEnum.ShowElement;
+                    switch (item.ChangeType)
+                    {
+                        case Objects.Change.ChangeTypeEnum.Move:
+                            _action = ActionEnum.ShowMove;
+                            break;
+
+                        case Objects.Change.ChangeTypeEnum.DeletedElement:
+                            _action = ActionEnum.ShowSolid;
+                            break;
+
+                        default:
+                            _action = ActionEnum.ShowElement;
+                            break;
+                    }
+                }               
+                
+                else
+                {
+                    // we have an id?
+                    int id = (int)e.Node.Tag;
+
+                    _idsToShow = new ElementId[] { new ElementId(id) };
+                    _action = ActionEnum.ShowElement;
+                }
             }
         }
 
@@ -377,6 +504,139 @@ namespace Metamorphosis.UI
                     renderByChangeType();
                     break;
             }
+        }
+
+        private IList<Objects.VectorObject> lookupPoints(IList<Objects.Change> items)
+        {
+            List<Objects.VectorObject> vectors = new List<Objects.VectorObject>();
+            foreach (var item in items)
+            {
+                if (item.ChangeType != Objects.Change.ChangeTypeEnum.Move) continue;
+
+                if (String.IsNullOrEmpty(item.MoveDescription) == false)
+                {
+                    XYZ from1 = null; XYZ from2 = null; XYZ to1 = null; XYZ to2 = null;
+
+                    if (Utilities.RevitUtils.DeSerializeMove(item.MoveDescription, out from1, out to1, out from2, out to2))
+                    {
+                        vectors.Add(new Objects.VectorObject(from1, to1.Subtract(from1)));
+
+                        if (from2 != null)
+                        {
+                            vectors.Add(new Objects.VectorObject(from2, to2.Subtract(from2)));
+                        }
+                    }
+
+
+                }
+            }
+
+            return vectors;
+
+        }
+
+        private void onOpening(object sender, CancelEventArgs e)
+        {
+            // when the thing opens...
+
+        }
+
+        private void onNodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                _rightClickedNode = e.Node;
+            }
+            else
+            {
+                _rightClickedNode = null;
+            }
+        }
+
+        private void tsmiShow_Click(object sender, EventArgs e)
+        {
+            // context menu...
+            List<Objects.Change> changes = new List<Objects.Change>();
+            if (_rightClickedNode == null)
+            {
+                MessageBox.Show("Please right click on a node in the tree?");
+                return;
+            }
+
+            collectTreeChanges(_rightClickedNode, changes);
+
+            // see if we've got all nodes that are shown the same way...
+            if (changes.Count==0)
+            {
+                MessageBox.Show("There are no show-able changes?");
+                return;
+            }
+
+            IList<Objects.Change.ChangeTypeEnum> types = changes.Select(g => g.ChangeType).Distinct().ToList();
+
+            if (types.Count>1)
+            {
+                MessageBox.Show("Sorry! You cannot show different kinds of changes at the same time via this method. Select a smaller set.");
+                return;
+            }
+
+            _selectedItems = changes;
+
+            if (types[0] == Objects.Change.ChangeTypeEnum.DeletedElement) _action = ActionEnum.ShowSolid;
+            if (types[0] == Objects.Change.ChangeTypeEnum.GeometryChange) _action = ActionEnum.ShowElement;
+            if (types[0] == Objects.Change.ChangeTypeEnum.Move) _action = ActionEnum.ShowMove;
+            if (types[0] == Objects.Change.ChangeTypeEnum.NewElement) _action = ActionEnum.ShowElement;
+            if (types[0] == Objects.Change.ChangeTypeEnum.ParameterChange) _action = ActionEnum.ShowElement;
+
+            
+        }
+
+        private void collectTreeChanges( TreeNode node, IList<Objects.Change> changes)
+        {
+            if (node.Tag is Objects.Change)
+            {
+                Objects.Change c = node.Tag as Objects.Change;
+                if (c != null) changes.Add(c);
+            }
+
+            if (node.Nodes.Count>0)
+            {
+                foreach( TreeNode child in node.Nodes )
+                {
+                    collectTreeChanges(child, changes);
+                }
+            }
+        }
+
+        private void tsmiSelect_Click(object sender, EventArgs e)
+        {
+            // context menu...
+            List<Objects.Change> changes = new List<Objects.Change>();
+            if (_rightClickedNode == null)
+            {
+                MessageBox.Show("Please right click on a node in the tree?");
+                return;
+            }
+
+            collectTreeChanges(_rightClickedNode, changes);
+
+            // see if we've got all nodes that are shown the same way...
+            if (changes.Count == 0)
+            {
+                MessageBox.Show("There are no select-able changes?");
+                return;
+            }
+
+            _selectedItems = 
+            changes.Where(c => c.ChangeType != Objects.Change.ChangeTypeEnum.DeletedElement).ToList();
+
+            if (_selectedItems.Count==0)
+            {
+                MessageBox.Show("Cannot select these changes?");
+                return;
+            }
+
+            _action = ActionEnum.Select;
         }
     }
 }

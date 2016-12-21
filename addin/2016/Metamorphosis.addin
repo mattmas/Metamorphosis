@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RevitAddIns>
   <AddIn Type="Application">
-    <Name>Revit FingerPrint</Name>
+    <Name>Metamorphosis</Name>
     <Assembly>.\Metamorphosis\Metamorphosis.dll</Assembly>
     <AddInId>4d647582-3529-4cfe-a977-00ce3dd86b7a</AddInId>
     <FullClassName>Metamorphosis.ExternalApp</FullClassName>
