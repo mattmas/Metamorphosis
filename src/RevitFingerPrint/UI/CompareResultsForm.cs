@@ -17,24 +17,29 @@ namespace Metamorphosis.UI
     {
         private IList<Objects.Change> _changes;
         private UIDocument _uiDoc;
+        private Document _chosenDoc;
         private EventHandler<IdlingEventArgs> _idleEvent;
         private bool _isResetting = false;
+        private bool _isLinkDoc = false;
 
-        private enum ActionEnum { None,ShowElement, Shutdown, ColorElements, RemoveColor, ResetColors, ShowSolid, ShowMove, Select};
+        private enum ActionEnum { None,ShowElement, Shutdown, ColorElements, RemoveColor, ResetColors, ShowSolid, ShowMove, ShowRotation, Select};
         private ActionEnum _action = ActionEnum.None;
         private ICollection<ElementId> _idsToShow;
         private Dictionary<int, bool> _viewsColored = new Dictionary<int, bool>();
         private IList<Objects.Change> _selectedItems;
         private TreeNode _rightClickedNode;
 
-        public CompareResultsForm(UIDocument uiDoc, IList<Objects.Change> changes)
+        public CompareResultsForm(UIDocument uiDoc, Document chosenDoc, IList<Objects.Change> changes)
         {
             _uiDoc = uiDoc;
             _changes = changes;
+            _chosenDoc = chosenDoc;
             InitializeComponent();
 
             _idleEvent = Application_Idling;
             _uiDoc.Application.Idling += _idleEvent;
+
+            _isLinkDoc = (uiDoc.Document.Title != chosenDoc.Title);
         }
 
         private void onShown(object sender, EventArgs e)
@@ -43,6 +48,16 @@ namespace Metamorphosis.UI
            
 
             cbRender.SelectedIndex = 0;
+
+            if (_isLinkDoc)
+            {
+                MessageBox.Show(this, "The results are not for the currently active model. Limited highlighting will be available", "Limitations for Linked Model");
+                button3.Enabled = false;
+                button2.Enabled = false;
+
+                this.Text = "Metamorphosis: Compare Results for: " + _chosenDoc.Title;
+                this.BackColor = System.Drawing.Color.LightBlue;
+            }
            
         }   
 
@@ -87,6 +102,10 @@ namespace Metamorphosis.UI
                         performShowMove();
                         break;
 
+                    case ActionEnum.ShowRotation:
+                        performShowRotate();
+                        break;
+
                     case ActionEnum.Select:
                         performSelect();
                         break;
@@ -102,6 +121,11 @@ namespace Metamorphosis.UI
 
         private void performShow()
         {
+            if (_isLinkDoc)
+            {
+                performShowSolid();
+                return;
+            }
             List<ElementId> ids = new List<ElementId>();
             foreach (var change in _selectedItems) ids.Add(new ElementId(change.ElementId));
             
@@ -111,6 +135,8 @@ namespace Metamorphosis.UI
 
         private void performSelect()
         {
+            if (_isLinkDoc) return; // can't
+
             List<ElementId> ids = new List<ElementId>();
             foreach (var item in _selectedItems) ids.Add(new ElementId(item.ElementId));
             _uiDoc.Selection.SetElementIds(ids);
@@ -132,7 +158,7 @@ namespace Metamorphosis.UI
                 List<ElementId> ids = new List<ElementId>();
                 foreach (var change in _selectedItems) ids.Add(new ElementId(change.ElementId));
 
-                _uiDoc.ShowElements(ids);
+                if (!_isLinkDoc) _uiDoc.ShowElements(ids);
 
                 // retrieve the points:
                 IList<Objects.VectorObject> vectors = lookupPoints(_selectedItems);
@@ -142,6 +168,31 @@ namespace Metamorphosis.UI
             catch (Exception ex)
             {
                 MessageBox.Show("Error while trying to show move: " + ex);
+            }
+
+        }
+
+        private void performShowRotate()
+        {
+
+            try
+            {
+                // try to show the rotate stuff.
+
+                // show the vectors, and zoom.
+                List<ElementId> ids = new List<ElementId>();
+                foreach (var change in _selectedItems) ids.Add(new ElementId(change.ElementId));
+
+                if (!_isLinkDoc) _uiDoc.ShowElements(ids);
+
+                // retrieve the rotation vectors:
+                IList<Objects.VectorObject> vectors = lookupRotations(_selectedItems);
+                Utilities.AVFUtility.ShowVectors(_uiDoc.Document, vectors, true);
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error while trying to show rotation: " + ex);
             }
 
         }
@@ -434,12 +485,16 @@ namespace Metamorphosis.UI
                             _action = ActionEnum.ShowMove;
                             break;
 
+                        case Objects.Change.ChangeTypeEnum.Rotate:
+                            _action = ActionEnum.ShowRotation;
+                            break;
+
                         case Objects.Change.ChangeTypeEnum.DeletedElement:
                             _action = ActionEnum.ShowSolid;
                             break;
 
                         default:
-                            _action = ActionEnum.ShowElement;
+                            _action = (_isLinkDoc ? ActionEnum.ShowSolid : ActionEnum.ShowElement);
                             break;
                     }
                 }               
@@ -450,7 +505,7 @@ namespace Metamorphosis.UI
                     int id = (int)e.Node.Tag;
 
                     _idsToShow = new ElementId[] { new ElementId(id) };
-                    _action = ActionEnum.ShowElement;
+                    if (!_isLinkDoc) _action = ActionEnum.ShowElement;
                 }
             }
         }
@@ -535,6 +590,47 @@ namespace Metamorphosis.UI
 
         }
 
+        private IList<Objects.VectorObject> lookupRotations(IList<Objects.Change> items)
+        {
+            List<Objects.VectorObject> vectors = new List<Objects.VectorObject>();
+            foreach (var item in items)
+            {
+                if (item.ChangeType != Objects.Change.ChangeTypeEnum.Rotate) continue;
+
+                if (String.IsNullOrEmpty(item.RotationDescription) == false)
+                {
+                    XYZ point = null; XYZ vector = null; float rotation;
+
+                    if (Utilities.RevitUtils.DeSerializeRotation(item.RotationDescription, out point, out vector, out rotation ))
+                    {
+                        double defaultTall = 10;
+                        double defaultWide = 5;
+                        var box = Utilities.RevitUtils.DeserializeBoundingBox(item.BoundingBoxDescription);
+                        if (box != null)
+                        {
+                            defaultTall = (box.Max.Z - box.Min.Z) * 1.2;
+                            defaultWide = (box.Max.X - box.Min.X) * 1.5;
+                        }
+                        // one vector going up.
+                        vectors.Add(new Objects.VectorObject(point, vector.Normalize().Multiply(defaultTall)));
+
+                        // then one for each rotation indicator
+                        vectors.Add(new Objects.VectorObject(point, new XYZ(1.0, 0.0, 0).Multiply(defaultWide)));
+                        vectors.Add(new Objects.VectorObject(point, new XYZ(Math.Cos((double)rotation), Math.Sin((double)rotation), 0).Multiply(defaultWide)));
+
+
+                        
+                    }
+
+
+                }
+            }
+
+            return vectors;
+        }
+
+
+
         private void onOpening(object sender, CancelEventArgs e)
         {
             // when the thing opens...
@@ -555,6 +651,7 @@ namespace Metamorphosis.UI
 
         private void tsmiShow_Click(object sender, EventArgs e)
         {
+            
             // context menu...
             List<Objects.Change> changes = new List<Objects.Change>();
             if (_rightClickedNode == null)
@@ -585,6 +682,7 @@ namespace Metamorphosis.UI
             if (types[0] == Objects.Change.ChangeTypeEnum.DeletedElement) _action = ActionEnum.ShowSolid;
             if (types[0] == Objects.Change.ChangeTypeEnum.GeometryChange) _action = ActionEnum.ShowElement;
             if (types[0] == Objects.Change.ChangeTypeEnum.Move) _action = ActionEnum.ShowMove;
+            if (types[0] == Objects.Change.ChangeTypeEnum.Rotate) _action = ActionEnum.ShowRotation;
             if (types[0] == Objects.Change.ChangeTypeEnum.NewElement) _action = ActionEnum.ShowElement;
             if (types[0] == Objects.Change.ChangeTypeEnum.ParameterChange) _action = ActionEnum.ShowElement;
 
@@ -610,6 +708,11 @@ namespace Metamorphosis.UI
 
         private void tsmiSelect_Click(object sender, EventArgs e)
         {
+            if (_isLinkDoc)
+            {
+                MessageBox.Show("Unable to select in Linked-Model...");
+                return;
+            }
             // context menu...
             List<Objects.Change> changes = new List<Objects.Change>();
             if (_rightClickedNode == null)

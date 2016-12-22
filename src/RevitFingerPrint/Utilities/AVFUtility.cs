@@ -167,6 +167,27 @@ namespace Metamorphosis.Utilities
             updateView(doc.ActiveView, StyleEnum.Vectors);
 
         }
+
+        internal static void Clear(Autodesk.Revit.UI.UIDocument uiDoc)
+        {
+            Document doc = uiDoc.Document;
+            Transaction t = null;
+            if (doc.IsModifiable == false)
+            {
+                t = new Transaction(doc, "Clear Visualizations");
+                t.Start();
+            }
+            SpatialFieldManager sfm = null;
+            sfm = SpatialFieldManager.GetSpatialFieldManager(uiDoc.ActiveGraphicalView);
+            if (sfm == null) sfm = SpatialFieldManager.CreateSpatialFieldManager(uiDoc.ActiveGraphicalView, 1);
+
+            sfm.Clear();
+
+            if (t != null)
+            {
+                t.Commit();
+            }
+        }
         #endregion
 
         #region PrivateMethods

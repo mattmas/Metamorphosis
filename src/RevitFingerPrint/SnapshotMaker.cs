@@ -16,6 +16,7 @@ namespace Metamorphosis
         private Document _doc;
         private Dictionary<int, Parameter> _paramDict = new Dictionary<int, Parameter>();
         private Dictionary<string, int> _valueDict = new Dictionary<string, int>();
+        private Dictionary<string, string> _headerDict = new Dictionary<string, string>();
         private string _filename;
         private int _valueId = 0;
         private List<Level> _allLevels;
@@ -94,6 +95,16 @@ namespace Metamorphosis
             System.Diagnostics.Debug.WriteLine((DateTime.Now - start) + ": " + instances.Count + " instances and " + typeElementsUsed.Count + " types.");
 
             // go through all of the type elements and instances and capture the parameter ids
+            _headerDict["SchemaVersion"] = "1.0";
+            _headerDict["Model"] = Utilities.RevitUtils.GetModelPath(_doc);
+            _headerDict["ExportVersion"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            _headerDict["ExportDate"] = DateTime.Now.ToString();
+            _headerDict["ExportDateTicks"] = DateTime.Now.Ticks.ToString();
+            _headerDict["ExportingUser"] = Environment.UserDomainName + "\\" + Environment.UserName;
+            _headerDict["MachineName"] = Environment.MachineName;
+
+            updateHeaderTable();
+
             updateParameterDictionary(typeElementsUsed.Values.ToList());
             System.Diagnostics.Debug.WriteLine((DateTime.Now - start) + ": Parameter Dictionary Updated for Types");
             updateParameterDictionary(instances);
@@ -140,6 +151,27 @@ namespace Metamorphosis
                         if (catName.Contains("'")) catName = catName.Replace("'", "''");
                         var cmd = conn.CreateCommand();
                         cmd.CommandText = String.Format("INSERT INTO _objects_id (id,external_id,category,isType) VALUES({0},'{1}','{2}',{3})", e.Id.IntegerValue, e.UniqueId,catName, (isTypes) ? 1:0);
+
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    transaction.Commit();
+                }
+            }
+        }
+
+        private void updateHeaderTable()
+        {
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _filename + ";Version=3;"))
+            {
+                conn.Open();
+                using (var transaction = conn.BeginTransaction())
+                {
+                    foreach (var pair in _headerDict)
+                    {
+                       
+                        var cmd = conn.CreateCommand();
+                        cmd.CommandText = String.Format("INSERT INTO _objects_header (keyword,value) VALUES('{0}','{1}')", pair.Key,pair.Value);
 
                         cmd.ExecuteNonQuery();
                     }
@@ -210,7 +242,18 @@ namespace Metamorphosis
                             if (p.Definition == null) continue; // don't want that!
 
                             //Quick and Dirty - will need to call different stuff for each thing
-                            string val = p.AsValueString();
+                            string val = null;
+
+                            switch (p.StorageType)
+                            {
+                                case StorageType.String:
+                                    val = p.AsString();
+                                    break;
+                                default:
+                                    val = p.AsValueString();
+                                    break;
+                            }
+                            
 
                             if (val == null) val = "(n/a)";
 
@@ -282,6 +325,7 @@ namespace Metamorphosis
                         String bbMax = String.Empty;
                         string lp = String.Empty;
                         string lp2 = String.Empty;
+                        float rotation = -1.0f;
 
                         if (box != null)
                         {
@@ -296,6 +340,15 @@ namespace Metamorphosis
                             if (pt != null)
                             {
                                 lp = Utilities.RevitUtils.SerializePoint(pt.Point);
+                                try
+                                {
+                                    if (e is FamilyInstance)
+                                    {                                     
+                                        rotation = (float)pt.Rotation;
+                                    }
+                                }
+                                catch {  // swallow. Some just don't like it...
+                                }
                             }
                             else
                             {
@@ -323,7 +376,7 @@ namespace Metamorphosis
                         if (lev != null) levName = lev.Name;
 
                             var cmd = conn.CreateCommand();
-                        cmd.CommandText = String.Format("INSERT INTO _objects_geom (id,BoundingBoxMin,BoundingBoxMax,Location,Location2,Level) VALUES({0},'{1}','{2}','{3}','{4}','{5}')", e.Id.IntegerValue, bbMin, bbMax, lp, lp2, levName);
+                        cmd.CommandText = String.Format("INSERT INTO _objects_geom (id,BoundingBoxMin,BoundingBoxMax,Location,Location2,Level,Rotation) VALUES({0},'{1}','{2}','{3}','{4}','{5}',{6})", e.Id.IntegerValue, bbMin, bbMax, lp, lp2, levName, rotation);
 
                         cmd.ExecuteNonQuery();
                     }

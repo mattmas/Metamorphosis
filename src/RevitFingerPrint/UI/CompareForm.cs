@@ -13,6 +13,7 @@ namespace Metamorphosis.UI
 {
     public partial class CompareForm : System.Windows.Forms.Form
     {
+        #region Declarations/Properties
         public Boolean AllCategories { get; set; }
         public Document Document { get; set; }
 
@@ -22,13 +23,23 @@ namespace Metamorphosis.UI
 
         public IList<Category> SelectedCategories { get; set; } = new List<Category>();
 
-        private Document _doc;
+        public IList<Document> AllDocuments { get; set; }
 
-        public CompareForm(Document doc, string suggestedFile)
+        private IFilenameHint _hint;
+        private Document _doc;
+        #endregion
+
+        public CompareForm(Document doc, IList<Document> allDocs, IFilenameHint hint)
         {
             InitializeComponent();
 
-            tbPrevious.Text = suggestedFile;
+            _hint = hint;
+            this.cbDocumentChoice.Items.AddRange(allDocs.ToArray());
+            this.cbDocumentChoice.SelectedItem = doc;
+           
+
+
+           
             _doc = doc;
         }
 
@@ -50,7 +61,7 @@ namespace Metamorphosis.UI
             AllCategories = true;
             collectCategories(treeView1.Nodes[0]);
 
-
+            Document = cbDocumentChoice.SelectedItem as Document;
 
             this.DialogResult = DialogResult.OK;
             this.Close();
@@ -66,12 +77,23 @@ namespace Metamorphosis.UI
 
         private void onShown(object sender, EventArgs e)
         {
+            renderCategories();
+        }
+
+        private void renderCategories()
+        {
+            treeView1.Nodes.Clear(); // reset.
+
             // build the list of categories...
             TreeNode root = new TreeNode("Categories");
             treeView1.Nodes.Add(root);
             Dictionary<CategoryType, TreeNode> types = new Dictionary<CategoryType, TreeNode>();
 
-            foreach( Category c in _doc.Settings.Categories)
+            Document doc = _doc;
+            Document chosen = cbDocumentChoice.SelectedItem as Document;
+            if (chosen != null) doc = chosen;
+
+            foreach (Category c in doc.Settings.Categories)
             {
                 if (c.CategoryType == CategoryType.Internal) continue;
                 if (c.CategoryType == CategoryType.Invalid) continue;
@@ -120,6 +142,19 @@ namespace Metamorphosis.UI
                 collectCategories(child);
             }
         }
-      
+
+        private void onSelectedModelChange(object sender, EventArgs e)
+        {
+            if (_hint != null)
+            {
+                // get the selected document.
+                Document d = cbDocumentChoice.SelectedItem as Document;
+                if (d != null)
+                {
+                    tbPrevious.Text = _hint.GetFilenameHint(d);
+                    renderCategories();
+                }
+            }
+        }
     }
 }

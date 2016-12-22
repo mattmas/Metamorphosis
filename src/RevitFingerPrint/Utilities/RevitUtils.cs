@@ -44,6 +44,40 @@ namespace Metamorphosis.Utilities
             return null;
         }
 
+        internal static IList<Document> GetCurrentDocumentAndLinks(Document active)
+        {
+            List<Document> allDocs = new List<Document>();
+            allDocs.Add(active);
+            FilteredElementCollector coll = new FilteredElementCollector(active);
+            coll.OfClass(typeof(RevitLinkInstance));
+
+            IList<RevitLinkInstance> instances = coll.Cast<RevitLinkInstance>().ToList();
+
+            foreach( var instance in instances )
+            {
+                Document linkDoc = instance.GetLinkDocument();
+                if (linkDoc != null) allDocs.Add(linkDoc);
+            }
+
+            return allDocs;
+        }
+
+        internal static string GetModelPath( Document doc )
+        {
+            if (doc == null) return String.Empty; 
+
+            if (doc.IsWorkshared)
+            {
+            
+                ModelPath mp = doc.GetWorksharingCentralModelPath();
+                return ModelPathUtils.ConvertModelPathToUserVisiblePath(mp);
+            }
+            else
+            {
+                return doc.PathName;
+            }
+        }
+
         internal static string SerializeMove( XYZ from, XYZ to )
         {
             return from.X.ToString(CultureInfo.InvariantCulture) + "," + from.Y.ToString(CultureInfo.InvariantCulture) + "," + from.Z.ToString(CultureInfo.InvariantCulture) + "," +
@@ -59,6 +93,30 @@ namespace Metamorphosis.Utilities
                 from2.X.ToString(CultureInfo.InvariantCulture) + "," + from2.Y.ToString(CultureInfo.InvariantCulture) + "," + from2.Z.ToString(CultureInfo.InvariantCulture) + "," +
                 to2.X.ToString(CultureInfo.InvariantCulture) + "," + to2.Y.ToString(CultureInfo.InvariantCulture) + "," + to2.Z.ToString(CultureInfo.InvariantCulture);
 
+        }
+
+        internal static string SerializeRotation( XYZ point, XYZ vector, float rotation)
+        {
+            return point.X.ToString(CultureInfo.InvariantCulture) + "," + point.Y.ToString(CultureInfo.InvariantCulture) + "," + point.Z.ToString(CultureInfo.InvariantCulture) + "," +
+              vector.X.ToString(CultureInfo.InvariantCulture) + "," + vector.Y.ToString(CultureInfo.InvariantCulture) + "," + vector.Z.ToString(CultureInfo.InvariantCulture) + "," +
+              rotation.ToString(CultureInfo.InvariantCulture);
+
+
+        }
+
+        internal static bool DeSerializeRotation(string input, out XYZ point, out XYZ vector, out float rotation)
+        {
+            point = null; vector = null; rotation = -1;
+            if (String.IsNullOrEmpty(input)) return false;
+
+            string[] values = input.Split(',');
+            if (values.Length != 7) return false;
+
+            point = new XYZ(Double.Parse(values[0]), Double.Parse(values[1]), Double.Parse(values[2]));
+            vector = new XYZ(Double.Parse(values[3]), Double.Parse(values[4]), Double.Parse(values[5]));
+            rotation = float.Parse(values[6]);
+
+            return true;
         }
 
         internal static bool DeSerializeMove( string input, out XYZ from1, out XYZ to1, out XYZ from2, out XYZ to2 )

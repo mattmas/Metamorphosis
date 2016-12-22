@@ -25,6 +25,8 @@ namespace Metamorphosis.Objects
         public XYZ LocationPoint { get; set; }
         public XYZ LocationPoint2 { get; set; }
 
+        public float Rotation { get; set; } = -1.0f;
+
         public BoundingBoxXYZ BoundingBox { get; set; }
     }
 }

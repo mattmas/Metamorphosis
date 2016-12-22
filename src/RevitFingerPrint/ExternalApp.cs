@@ -52,6 +52,14 @@ namespace Metamorphosis
             comp.Image = getImage("Metamorphosis.Images.Compare-16.png");
             comp.LargeImage = getImage("Metamorphosis.Images.Compare-32.png");
             panel.AddItem(comp);
+
+            // anything below here on the slideout?
+            panel.AddSlideOut();
+            var clear = new PushButtonData("ClearAVF", "Clear", System.Reflection.Assembly.GetExecutingAssembly().Location, "Metamorphosis.Commands.ClearAVF");
+            clear.ToolTip = "Clear any AVF graphics from the current view.";
+            clear.LongDescription = "Clear any Analysis Visualization Framework graphic primitives (faces, boxes, vectors) from the active view.";
+            panel.AddItem(clear);
+
         }
 
         private System.Windows.Media.ImageSource getImage(string imageFile)

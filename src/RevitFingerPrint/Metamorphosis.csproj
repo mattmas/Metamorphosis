@@ -49,20 +49,18 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-
   <Choose>
-
     <When Condition="'$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Release'">
-  <ItemGroup>
-    <Reference Include="RevitAPI">
-      <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2017\RevitAPI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="RevitAPIUI">
-      <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2017\RevitAPIUI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-  </ItemGroup>
+      <ItemGroup>
+        <Reference Include="RevitAPI">
+          <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2017\RevitAPI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="RevitAPIUI">
+          <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2017\RevitAPIUI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
     </When>
     <When Condition="'$(Configuration)' == 'Debug2016' Or '$(Configuration)' == 'Release2016'">
       <ItemGroup>
@@ -76,16 +74,13 @@
         </Reference>
       </ItemGroup>
     </When>
-  
   </Choose>
-  
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="PresentationCore" />
- 
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
@@ -104,10 +99,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\ClearAVF.cs" />
     <Compile Include="Commands\Compare.cs" />
     <Compile Include="Commands\Snapshot.cs" />
     <Compile Include="ComparisonMaker.cs" />
     <Compile Include="ExternalApp.cs" />
+    <Compile Include="IFilenameHint.cs" />
     <Compile Include="Objects\Change.cs" />
     <Compile Include="Objects\ChangeSummary.cs" />
     <Compile Include="Objects\RevitElement.cs" />

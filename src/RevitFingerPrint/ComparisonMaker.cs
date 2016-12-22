@@ -250,7 +250,8 @@ namespace Metamorphosis
                         Category = current.Category,
                         ElementId = current.ElementId,
                         UniqueId = current.UniqueId,
-                        ChangeDescription = "Location Offset " + dist + " ft."
+                        ChangeDescription = "Location Offset " + dist + " ft.",
+                        Level = current.Level
                     };
                     if (current.BoundingBox != null) c.BoundingBoxDescription = Utilities.RevitUtils.SerializeBoundingBox(current.BoundingBox);
 
@@ -258,6 +259,27 @@ namespace Metamorphosis
                 c.MoveDescription = Utilities.RevitUtils.SerializeMove(previous.LocationPoint2, current.LocationPoint2);
                     return c;
                 
+            }
+
+            // check rotation
+            float rotationTolerance = 0.0349f; // two degrees?
+            float rotationDiff = current.Rotation - previous.Rotation;
+            
+            if (Math.Abs(rotationDiff) > rotationTolerance)
+            {
+                Change c = new Change()
+                {
+                    ChangeType = Change.ChangeTypeEnum.Rotate,
+                    Category = current.Category,
+                    ElementId = current.ElementId,
+                    UniqueId = current.UniqueId,
+                    ChangeDescription = "Rotation: " + ((rotationDiff) * 180.0 / Math.PI).ToString("F2") + " degrees",
+                    Level = current.Level
+                };
+                if (current.BoundingBox != null) c.BoundingBoxDescription = Utilities.RevitUtils.SerializeBoundingBox(current.BoundingBox);
+                c.RotationDescription = Utilities.RevitUtils.SerializeRotation(current.LocationPoint, XYZ.BasisZ, rotationDiff);
+
+                return c;
             }
 
             // now the bounding box...
@@ -369,7 +391,17 @@ namespace Metamorphosis
                     {
                         if (p.Definition == null) continue; // we don't want this!
                         string definition = p.Definition.Name;
-                        string val = p.AsValueString();
+                        string val = null;
+                        switch ( p.StorageType)
+                        {
+                            case StorageType.String:
+                                val = p.AsString();
+                                break;
+
+                            default:
+                                val = p.AsValueString();
+                                break;
+                        }
 
                         if (val == null) val = "(n/a)";
 
@@ -380,28 +412,35 @@ namespace Metamorphosis
                         System.Diagnostics.Debug.WriteLine("Weird database: " + ex);
                     }
                 }
+                revitElem.IsType = isTypes;
 
-                var box = e.get_BoundingBox(null);
-                if (box != null) revitElem.BoundingBox = box;
+                if (!isTypes)
+                {
+                    var box = e.get_BoundingBox(null);
+                    if (box != null) revitElem.BoundingBox = box;
 
-                LocationPoint lp = e.Location as LocationPoint;
-                if (lp != null)
-                {
-                    revitElem.LocationPoint = lp.Point;
-                }
-                else
-                {
-                    LocationCurve lc = e.Location as LocationCurve;
-                    if (lc != null)
+                    LocationPoint lp = e.Location as LocationPoint;
+                    if (lp != null)
                     {
-                        if (lc.Curve.IsBound)
+                        revitElem.LocationPoint = lp.Point;
+                        if (e is FamilyInstance)
                         {
-                            revitElem.LocationPoint = lc.Curve.GetEndPoint(0);
-                            revitElem.LocationPoint2 = lc.Curve.GetEndPoint(1);
+                            revitElem.Rotation = (float)lp.Rotation;
+                        }
+                    }
+                    else
+                    {
+                        LocationCurve lc = e.Location as LocationCurve;
+                        if (lc != null)
+                        {
+                            if (lc.Curve.IsBound)
+                            {
+                                revitElem.LocationPoint = lc.Curve.GetEndPoint(0);
+                                revitElem.LocationPoint2 = lc.Curve.GetEndPoint(1);
+                            }
                         }
                     }
 
-                    revitElem.IsType = isTypes;
 
                     if (e.LevelId != ElementId.InvalidElementId)
                     {
@@ -411,7 +450,7 @@ namespace Metamorphosis
                     {
                         if (revitElem.LocationPoint != null)
                         {
-                            
+
 
                             // we want the next level down from the z value...
                             Level lev = Utilities.RevitUtils.GetNextLevelDown(revitElem.LocationPoint, _allLevels);
@@ -419,6 +458,7 @@ namespace Metamorphosis
                         }
                     }
                 }
+                
             }
         }
         private void readPrevious()
@@ -524,7 +564,7 @@ namespace Metamorphosis
                 conn.Open();
 
                 var cmd = conn.CreateCommand();
-                cmd.CommandText = "select id,BoundingBoxMin,BoundingBoxMax,Location,Location2,Level FROM _objects_geom";
+                cmd.CommandText = "select id,BoundingBoxMin,BoundingBoxMax,Location,Location2,Level,Rotation FROM _objects_geom";
 
                 using (SQLiteDataReader reader = cmd.ExecuteReader())
                 {
@@ -538,6 +578,7 @@ namespace Metamorphosis
                         string lp = reader.GetString(3);
                         string lp2 = reader.GetString(4);
                         string levName = reader.GetString(5);
+                        float rot = reader.GetFloat(6);
 
                         RevitElement elem = _idValues[entity_id];
 
@@ -550,7 +591,7 @@ namespace Metamorphosis
                         if (!String.IsNullOrEmpty(lp2)) elem.LocationPoint2 = parsePoint(lp2);
 
                         elem.Level = levName;
-
+                        elem.Rotation = rot;
                     }
                 }
             }
