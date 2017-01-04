@@ -343,8 +343,11 @@ namespace Metamorphosis
                                 try
                                 {
                                     if (e is FamilyInstance)
-                                    {                                     
-                                        rotation = (float)pt.Rotation;
+                                    {
+                                        if ((e as FamilyInstance).CanRotate)
+                                        {
+                                            rotation = (float)pt.Rotation;
+                                        }
                                     }
                                 }
                                 catch {  // swallow. Some just don't like it...

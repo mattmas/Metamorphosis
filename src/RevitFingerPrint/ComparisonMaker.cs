@@ -425,7 +425,10 @@ namespace Metamorphosis
                         revitElem.LocationPoint = lp.Point;
                         if (e is FamilyInstance)
                         {
-                            revitElem.Rotation = (float)lp.Rotation;
+                            if ((e as FamilyInstance).CanRotate)
+                            {
+                                revitElem.Rotation = (float)lp.Rotation;
+                            }
                         }
                     }
                     else
