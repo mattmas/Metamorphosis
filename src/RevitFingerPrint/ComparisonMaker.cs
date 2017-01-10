@@ -425,6 +425,21 @@ namespace Metamorphosis
                         revitElem.LocationPoint = lp.Point;
                         if (e is FamilyInstance)
                         {
+                            // special cases.
+                            if ((e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Columns) ||
+                                (e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_StructuralColumns))
+                            {
+                                // in this case, get the Z value from the 
+                                var offset = e.get_Parameter(BuiltInParameter.FAMILY_BASE_LEVEL_OFFSET_PARAM);
+
+                                if ((e.LevelId != ElementId.InvalidElementId) && (offset != null))
+                                {
+                                    Level levPt1 = _doc.GetElement(e.LevelId) as Level;
+                                    double newZ = levPt1.Elevation + offset.AsDouble();
+                                    revitElem.LocationPoint = new XYZ(revitElem.LocationPoint.X, revitElem.LocationPoint.Y, newZ);
+                                }
+                            }
+
                             if ((e as FamilyInstance).CanRotate)
                             {
                                 revitElem.Rotation = (float)lp.Rotation;
