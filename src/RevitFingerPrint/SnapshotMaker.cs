@@ -88,7 +88,14 @@ namespace Metamorphosis
                 ElementId typeId = elem.GetTypeId();
                 if (typeId != ElementId.InvalidElementId)
                 {
-                    if (typeElementsUsed.ContainsKey(typeId) == false) typeElementsUsed.Add(typeId, _doc.GetElement(typeId));
+                    if (typeElementsUsed.ContainsKey(typeId) == false)
+                    {
+                        Element typeElem = _doc.GetElement(typeId);
+                        if ((typeElem.Category != null))
+                        {
+                            typeElementsUsed.Add(typeId, typeElem); // only add if it's a typeElement with Category
+                        }
+                    }
                 }
             }
 

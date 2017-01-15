@@ -561,7 +561,7 @@ namespace Metamorphosis
                     while (reader.Read())
                     {
                         int id = reader.GetInt32(0);
-                        if (_idValues.ContainsKey(id) == false) continue; // not sure how.
+                        if (_idValues.ContainsKey(id) == false) _idValues[id] = new RevitElement() { ElementId = id };
                         string guid = reader.GetString(1);
                         string cat = reader.GetString(2);
                         int isType = reader.GetInt32(3);
