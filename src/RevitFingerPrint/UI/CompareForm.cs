@@ -36,10 +36,10 @@ namespace Metamorphosis.UI
             _hint = hint;
             this.cbDocumentChoice.Items.AddRange(allDocs.ToArray());
             this.cbDocumentChoice.SelectedItem = doc;
-           
 
 
-           
+            this.Text += " " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+
             _doc = doc;
         }
 

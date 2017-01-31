@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Autodesk.Revit.DB;
 using Metamorphosis.Objects;
 using System.Data.SQLite;
+using System.Globalization;
 
 namespace Metamorphosis
 {
@@ -627,7 +628,7 @@ namespace Metamorphosis
             string[] pieces = input.Split(',');
             if (pieces.Length != 3) return null;
 
-            return new XYZ(Double.Parse(pieces[0]), Double.Parse(pieces[1]), Double.Parse(pieces[2]));
+            return new XYZ(Double.Parse(pieces[0], CultureInfo.InvariantCulture), Double.Parse(pieces[1], CultureInfo.InvariantCulture), Double.Parse(pieces[2], CultureInfo.InvariantCulture));
         }
         #endregion
     }

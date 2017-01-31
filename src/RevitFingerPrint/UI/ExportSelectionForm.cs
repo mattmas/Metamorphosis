@@ -25,6 +25,8 @@ namespace Metamorphosis.UI
 
             cbSelectedModel.SelectedItem = current;
 
+            this.Text += " " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+
         }
 
         private void ExportSelectionForm_Load(object sender, EventArgs e)
