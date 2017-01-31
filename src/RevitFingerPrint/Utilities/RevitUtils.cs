@@ -34,8 +34,8 @@ namespace Metamorphosis.Utilities
             {
                 BoundingBoxXYZ box = new BoundingBoxXYZ()
                 {
-                    Min = new XYZ(Double.Parse(values[0]), Double.Parse(values[1]), Double.Parse(values[2])),
-                    Max = new XYZ(Double.Parse(values[3]), Double.Parse(values[4]), Double.Parse(values[5]))
+                    Min = new XYZ(Double.Parse(values[0], CultureInfo.InvariantCulture), Double.Parse(values[1], CultureInfo.InvariantCulture), Double.Parse(values[2], CultureInfo.InvariantCulture)),
+                    Max = new XYZ(Double.Parse(values[3], CultureInfo.InvariantCulture), Double.Parse(values[4], CultureInfo.InvariantCulture), Double.Parse(values[5], CultureInfo.InvariantCulture))
                 };
 
                 return box;
@@ -112,9 +112,9 @@ namespace Metamorphosis.Utilities
             string[] values = input.Split(',');
             if (values.Length != 7) return false;
 
-            point = new XYZ(Double.Parse(values[0]), Double.Parse(values[1]), Double.Parse(values[2]));
-            vector = new XYZ(Double.Parse(values[3]), Double.Parse(values[4]), Double.Parse(values[5]));
-            rotation = float.Parse(values[6]);
+            point = new XYZ(Double.Parse(values[0],CultureInfo.InvariantCulture), Double.Parse(values[1], CultureInfo.InvariantCulture), Double.Parse(values[2], CultureInfo.InvariantCulture));
+            vector = new XYZ(Double.Parse(values[3], CultureInfo.InvariantCulture), Double.Parse(values[4]), Double.Parse(values[5], CultureInfo.InvariantCulture));
+            rotation = float.Parse(values[6], CultureInfo.InvariantCulture);
 
             return true;
         }
@@ -128,13 +128,13 @@ namespace Metamorphosis.Utilities
             string[] values = input.Split(',');
             if ((values.Length != 6) && (values.Length != 12)) return false;
 
-            from1 = new XYZ(Double.Parse(values[0]), Double.Parse(values[1]), Double.Parse(values[2]));
-            to1 = new XYZ(Double.Parse(values[3]), Double.Parse(values[4]), Double.Parse(values[5]));
+            from1 = new XYZ(Double.Parse(values[0], CultureInfo.InvariantCulture), Double.Parse(values[1], CultureInfo.InvariantCulture), Double.Parse(values[2], CultureInfo.InvariantCulture));
+            to1 = new XYZ(Double.Parse(values[3], CultureInfo.InvariantCulture), Double.Parse(values[4], CultureInfo.InvariantCulture), Double.Parse(values[5], CultureInfo.InvariantCulture));
 
             if (values.Length==12)
             {
-                from2 = new XYZ(Double.Parse(values[6]), Double.Parse(values[7]), Double.Parse(values[8]));
-                to2 = new XYZ(Double.Parse(values[9]), Double.Parse(values[10]), Double.Parse(values[11]));
+                from2 = new XYZ(Double.Parse(values[6], CultureInfo.InvariantCulture), Double.Parse(values[7], CultureInfo.InvariantCulture), Double.Parse(values[8], CultureInfo.InvariantCulture));
+                to2 = new XYZ(Double.Parse(values[9]), Double.Parse(values[10], CultureInfo.InvariantCulture), Double.Parse(values[11], CultureInfo.InvariantCulture));
 
             }
 
