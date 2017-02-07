@@ -112,6 +112,12 @@
     <Compile Include="Objects\Parameter.cs" />
     <Compile Include="Objects\VectorObject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UI\ColorChoiceForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\ColorChoiceForm.Designer.cs">
+      <DependentUpon>ColorChoiceForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="UI\CompareForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -137,6 +143,9 @@
     <Compile Include="Utilities\WindowHandle.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="UI\ColorChoiceForm.resx">
+      <DependentUpon>ColorChoiceForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\CompareForm.resx">
       <DependentUpon>CompareForm.cs</DependentUpon>
     </EmbeddedResource>

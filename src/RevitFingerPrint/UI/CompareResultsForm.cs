@@ -257,11 +257,30 @@ namespace Metamorphosis.UI
             if (!_isResetting) _viewsColored[_uiDoc.ActiveGraphicalView.Id.IntegerValue] = true;
 
             Autodesk.Revit.DB.Color overrideColor = new Autodesk.Revit.DB.Color(0, 0, 0);
+
             // group changes by type...
-            foreach( var group in _changes.GroupBy( c => c.ChangeType).ToDictionary( c=> c.Key, c => c.ToList()))
+            var grouped =  _changes.GroupBy(c => c.ChangeType).ToDictionary(c => c.Key, c => c.ToList());
+
+            var list = grouped.Keys.ToList();
+            if (list.Contains( Objects.Change.ChangeTypeEnum.DeletedElement)) list.Remove(Objects.Change.ChangeTypeEnum.DeletedElement);
+            if (list.Count==0)
+            {
+                MessageBox.Show("No color-able change types!");
+                t.RollBack();
+                return;
+            }
+            UI.ColorChoiceForm choice = new UI.ColorChoiceForm(list);
+            if (choice.ShowDialog(this) != DialogResult.OK)
+            {
+                t.RollBack();
+                return;
+            }
+
+            foreach ( var group in grouped)
             {
                 if (group.Key == Objects.Change.ChangeTypeEnum.DeletedElement) continue; // can't
 
+                if (choice.ChangeTypes.Contains(group.Key) == false) continue; // not selected.
                 
                 var ogs = new Autodesk.Revit.DB.OverrideGraphicSettings();
 

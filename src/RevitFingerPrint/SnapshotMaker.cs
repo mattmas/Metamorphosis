@@ -402,7 +402,7 @@ namespace Metamorphosis
                         if (lev != null) levName = lev.Name;
 
                             var cmd = conn.CreateCommand();
-                        cmd.CommandText = String.Format("INSERT INTO _objects_geom (id,BoundingBoxMin,BoundingBoxMax,Location,Location2,Level,Rotation) VALUES({0},'{1}','{2}','{3}','{4}','{5}',{6})", e.Id.IntegerValue, bbMin, bbMax, lp, lp2, levName, rotation);
+                        cmd.CommandText = String.Format("INSERT INTO _objects_geom (id,BoundingBoxMin,BoundingBoxMax,Location,Location2,Level,Rotation) VALUES({0},'{1}','{2}','{3}','{4}','{5}',{6})", e.Id.IntegerValue, bbMin, bbMax, lp, lp2, escapeQuote(levName), rotation);
 
                         cmd.ExecuteNonQuery();
                     }
@@ -434,6 +434,10 @@ namespace Metamorphosis
             return lev;
         }
         
+        private string escapeQuote(string input)
+        {
+            return input.Replace("'", "''");
+        }
 
         #endregion
     }
