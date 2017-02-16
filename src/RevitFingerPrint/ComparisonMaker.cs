@@ -385,7 +385,8 @@ namespace Metamorphosis
                 var revitElem = new RevitElement() { ElementId = e.Id.IntegerValue, Category = (c != null) ? c.Name : "(none)" };
                 _currentElems.Add(e.Id.IntegerValue, revitElem);
 
-                foreach( var p in e.GetOrderedParameters())
+                IList<Autodesk.Revit.DB.Parameter> parms = Utilities.RevitUtils.GetParameters(e);
+                foreach( var p in parms)
                 {
                     //Quick and Dirty - will need to call different stuff for each thing
                     try

@@ -242,7 +242,7 @@ namespace Metamorphosis
 
                     foreach (Element e in elems)
                     {
-                        IList<Parameter> parms = e.GetOrderedParameters();
+                        IList<Parameter> parms = Utilities.RevitUtils.GetParameters(e);
 
                         foreach (var p in parms)
                         {
@@ -288,8 +288,9 @@ namespace Metamorphosis
 
             foreach( Element e in elems)
             {
-                IList<Parameter> parms = e.GetOrderedParameters();
-                
+                IList<Parameter> parms = Utilities.RevitUtils.GetParameters(e);
+
+                                             
                 foreach( Parameter p in parms )
                 {
                     if (p.Definition == null) continue; // ignore!

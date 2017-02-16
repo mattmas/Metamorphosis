@@ -289,25 +289,10 @@ namespace Metamorphosis.UI
                 Autodesk.Revit.DB.FillPatternElement solidFill = patternCollector.ToElements().Cast<Autodesk.Revit.DB.FillPatternElement>().First(x => x.GetFillPattern().IsSolidFill);
 
                 IList<ElementId> ids = collectIds(group.Value);
+
+                overrideColor = Utilities.Settingcs.GetColor(group.Key);
+
                 
-                switch( group.Key)
-                {
-                    case Objects.Change.ChangeTypeEnum.NewElement:
-                        overrideColor = new Autodesk.Revit.DB.Color(0, 255, 0);
-                        break;
-
-                    case Objects.Change.ChangeTypeEnum.ParameterChange:
-                        overrideColor = new Autodesk.Revit.DB.Color(255, 0, 0);
-                        break;
-
-                    case Objects.Change.ChangeTypeEnum.GeometryChange:
-                        overrideColor = new Autodesk.Revit.DB.Color(0, 0, 255);
-                        break;
-
-                    default:
-                        overrideColor = new Autodesk.Revit.DB.Color(255, 0, 0);
-                        break;
-                }
                 ogs.SetProjectionFillColor(overrideColor);
                 ogs.SetProjectionFillPatternId(solidFill.Id);
                 ogs.SetProjectionLineColor(overrideColor);

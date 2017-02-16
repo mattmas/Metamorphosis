@@ -78,6 +78,19 @@ namespace Metamorphosis.Utilities
             }
         }
 
+        internal static IList<Parameter> GetParameters(Element e)
+        {
+            IList<Parameter> parms = e.GetOrderedParameters();
+
+            // add a couple more that we might be interested in...
+            if (e is TextNote)
+            {
+                Parameter text = e.get_Parameter(BuiltInParameter.TEXT_TEXT);
+                if (text != null) parms.Add(text);
+            }
+
+            return parms;
+        }
         internal static string SerializeMove( XYZ from, XYZ to )
         {
             return from.X.ToString(CultureInfo.InvariantCulture) + "," + from.Y.ToString(CultureInfo.InvariantCulture) + "," + from.Z.ToString(CultureInfo.InvariantCulture) + "," +

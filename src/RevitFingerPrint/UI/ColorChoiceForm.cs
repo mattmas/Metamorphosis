@@ -13,34 +13,50 @@ namespace Metamorphosis.UI
     public partial class ColorChoiceForm : Form
     {
         public IList<Objects.Change.ChangeTypeEnum> ChangeTypes { get; set; }
+        private TreeNode _root;
 
         public ColorChoiceForm( IList<Objects.Change.ChangeTypeEnum> types)
         {
             InitializeComponent();
 
+            treeView1.CheckBoxes = true;
+            _root = treeView1.Nodes.Add("Change Type(s)");
             foreach( var typ in types )
             {
-                checkedListBox1.Items.Add(typ, true);
-                
+                TreeNode tn = _root.Nodes.Add( typ.ToString(), typ.ToString());
+                tn.Tag = typ;
+
+                Autodesk.Revit.DB.Color c = Utilities.Settingcs.GetColor(typ);
+
+                tn.BackColor = Color.FromArgb(c.Red, c.Green, c.Blue);
+                tn.Checked = true;
             }
+            _root.ExpandAll();
         }
 
         private void btnOK_Click(object sender, EventArgs e)
         {
-            if (checkedListBox1.CheckedItems.Count==0)
+            int count = 0;
+            foreach (TreeNode node in _root.Nodes) if (node.Checked) count++;
+
+            if (count==0)
             {
                 MessageBox.Show("You must select at least one change type!");
                 return; 
             }
             ChangeTypes = new List<Objects.Change.ChangeTypeEnum>();
 
-            foreach( var item in checkedListBox1.CheckedItems )
+            foreach( TreeNode item in _root.Nodes )
             {
-                ChangeTypes.Add((Objects.Change.ChangeTypeEnum)item);
+                if (item.Checked) ChangeTypes.Add((Objects.Change.ChangeTypeEnum)item.Tag);
             }
 
             this.DialogResult = DialogResult.OK;
             this.Close();
         }
+
+    
+
+        
     }
 }
