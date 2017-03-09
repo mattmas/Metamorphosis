@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.label1 = new System.Windows.Forms.Label();
             this.tbPrevious = new System.Windows.Forms.TextBox();
             this.button1 = new System.Windows.Forms.Button();
@@ -40,6 +41,10 @@
             this.cbDateTime = new System.Windows.Forms.CheckBox();
             this.label3 = new System.Windows.Forms.Label();
             this.cbDocumentChoice = new System.Windows.Forms.ComboBox();
+            this.cbSelectionSets = new System.Windows.Forms.ComboBox();
+            this.btnSaveCategories = new System.Windows.Forms.Button();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.SuspendLayout();
             // 
             // label1
@@ -71,6 +76,7 @@
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 2;
             this.button1.Text = "Browse";
+            this.toolTip1.SetToolTip(this.button1, "Browse for the previous snapshot.");
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
@@ -82,7 +88,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 167);
+            this.label2.Location = new System.Drawing.Point(12, 172);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(173, 13);
             this.label2.TabIndex = 3;
@@ -94,16 +100,16 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.treeView1.CheckBoxes = true;
-            this.treeView1.Location = new System.Drawing.Point(15, 197);
+            this.treeView1.Location = new System.Drawing.Point(15, 207);
             this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(426, 209);
+            this.treeView1.Size = new System.Drawing.Size(426, 211);
             this.treeView1.TabIndex = 4;
             this.treeView1.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.onAfterCheck);
             // 
             // btnStart
             // 
             this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnStart.Location = new System.Drawing.Point(366, 425);
+            this.btnStart.Location = new System.Drawing.Point(366, 437);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(75, 23);
             this.btnStart.TabIndex = 5;
@@ -115,7 +121,7 @@
             // 
             this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.button2.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.button2.Location = new System.Drawing.Point(264, 425);
+            this.button2.Location = new System.Drawing.Point(264, 437);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 6;
@@ -139,11 +145,12 @@
             // 
             this.cbDateTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.cbDateTime.AutoSize = true;
-            this.cbDateTime.Location = new System.Drawing.Point(33, 424);
+            this.cbDateTime.Location = new System.Drawing.Point(33, 436);
             this.cbDateTime.Name = "cbDateTime";
             this.cbDateTime.Size = new System.Drawing.Size(116, 17);
             this.cbDateTime.TabIndex = 10;
             this.cbDateTime.Text = "Date  stamp output";
+            this.toolTip1.SetToolTip(this.cbDateTime, "Add a date stamp to the output results filename.");
             this.cbDateTime.UseVisualStyleBackColor = true;
             // 
             // label3
@@ -164,13 +171,38 @@
             this.cbDocumentChoice.Name = "cbDocumentChoice";
             this.cbDocumentChoice.Size = new System.Drawing.Size(339, 21);
             this.cbDocumentChoice.TabIndex = 12;
+            this.toolTip1.SetToolTip(this.cbDocumentChoice, "Model to compare against previous results.");
             this.cbDocumentChoice.SelectedIndexChanged += new System.EventHandler(this.onSelectedModelChange);
+            // 
+            // cbSelectionSets
+            // 
+            this.cbSelectionSets.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbSelectionSets.FormattingEnabled = true;
+            this.cbSelectionSets.Location = new System.Drawing.Point(203, 169);
+            this.cbSelectionSets.Name = "cbSelectionSets";
+            this.cbSelectionSets.Size = new System.Drawing.Size(148, 21);
+            this.cbSelectionSets.TabIndex = 13;
+            this.toolTip1.SetToolTip(this.cbSelectionSets, "Previous category configurations");
+            this.cbSelectionSets.SelectedIndexChanged += new System.EventHandler(this.onCategorySettingChanged);
+            // 
+            // btnSaveCategories
+            // 
+            this.btnSaveCategories.Location = new System.Drawing.Point(365, 169);
+            this.btnSaveCategories.Name = "btnSaveCategories";
+            this.btnSaveCategories.Size = new System.Drawing.Size(75, 23);
+            this.btnSaveCategories.TabIndex = 14;
+            this.btnSaveCategories.Text = "Save";
+            this.toolTip1.SetToolTip(this.btnSaveCategories, "Save the currently selected categories for future use.");
+            this.btnSaveCategories.UseVisualStyleBackColor = true;
+            this.btnSaveCategories.Click += new System.EventHandler(this.btnSaveCategories_Click);
             // 
             // CompareForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(453, 485);
+            this.ClientSize = new System.Drawing.Size(453, 497);
+            this.Controls.Add(this.btnSaveCategories);
+            this.Controls.Add(this.cbSelectionSets);
             this.Controls.Add(this.cbDocumentChoice);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.cbDateTime);
@@ -208,5 +240,9 @@
         private System.Windows.Forms.CheckBox cbDateTime;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox cbDocumentChoice;
+        private System.Windows.Forms.ComboBox cbSelectionSets;
+        private System.Windows.Forms.Button btnSaveCategories;
+        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.SaveFileDialog saveFileDialog1;
     }
 }

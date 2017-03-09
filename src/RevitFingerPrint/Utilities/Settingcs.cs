@@ -61,6 +61,27 @@ namespace Metamorphosis.Utilities
             return new Autodesk.Revit.DB.Color(255, 0, 0);
         }
 
+        public static string GetDefaultCategories()
+        {
+            readData();
+
+          
+            if (_doc == null)
+            {
+                System.Diagnostics.Debug.WriteLine("Did not find settings document!");
+                return null;
+            }
+
+            XmlElement elem = _doc.SelectSingleNode("/Settings/DefaultSelection") as XmlElement;
+
+            if (elem == null) return null;
+
+            if (String.IsNullOrEmpty(elem.Value)) return null;
+
+            return elem.Value;
+
+        }
+
         private static void readData()
         {
             if (_doc != null) return;

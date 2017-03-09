@@ -34,5 +34,22 @@ namespace Metamorphosis.Utilities
             }
             return false;
         }
+
+        public static bool CanWriteToFolder(string folder)
+        {
+            try
+            {
+                string file = System.IO.Path.Combine(folder, "Test" + DateTime.Now.Ticks.ToString() + ".log");
+                System.IO.File.WriteAllText(file, "This is a test. Should be deleted.");
+                System.Threading.Thread.Sleep(100);
+                System.IO.File.Delete(file);
+                return true;
+            }
+            catch
+            {
+
+            }
+            return false;
+        }
     }
 }

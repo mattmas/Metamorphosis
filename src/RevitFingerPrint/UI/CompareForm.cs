@@ -78,6 +78,8 @@ namespace Metamorphosis.UI
         private void onShown(object sender, EventArgs e)
         {
             renderCategories();
+
+            readCategorySettings();
         }
 
         private void renderCategories()
@@ -113,6 +115,36 @@ namespace Metamorphosis.UI
             treeView1.Sort();
             root.Expand();
             root.Checked = true;
+
+        }
+
+        private void readCategorySettings()
+        {
+            try
+            {
+                cbSelectionSets.Items.Clear();
+                IList<Utilities.CategorySettingsFile> files = Utilities.CategorySettingsFile.GetFiles();
+                cbSelectionSets.Items.Add("Select");
+
+                foreach (var item in files) cbSelectionSets.Items.Add(item);                
+                
+                //set the default value
+                string defaultSet = Utilities.Settingcs.GetDefaultCategories();
+                if (defaultSet != null)
+                {
+                    var item = files.FirstOrDefault(f => f.Name.ToUpper() == defaultSet.ToUpper());
+                    if (item != null) cbSelectionSets.SelectedItem = item;
+                }
+                if (cbSelectionSets.SelectedItem == null) cbSelectionSets.SelectedIndex = 0;
+
+                //disable if not present.
+                if (cbSelectionSets.Items.Count <= 1) cbSelectionSets.Enabled = false;
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Unexpected error reading stored category settings: " + ex.GetType().Name + ": " + ex.Message);
+            }
         }
 
         private void onAfterCheck(object sender, TreeViewEventArgs e)
@@ -154,6 +186,98 @@ namespace Metamorphosis.UI
                     tbPrevious.Text = _hint.GetFilenameHint(d);
                     renderCategories();
                 }
+            }
+        }
+
+        private void btnSaveCategories_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string central, user;
+                Utilities.CategorySettingsFile.GetFolders(out central, out user);
+
+                string target = central;
+                if (Utilities.Utility.CanWriteToFolder(central) == false) target = user;
+
+                saveFileDialog1.Filter = "CategorySettings Files(*.categories)|*.categories|All Files(*.*)|*.*";
+                saveFileDialog1.InitialDirectory = target;
+                if (saveFileDialog1.ShowDialog(this) == DialogResult.OK)
+                {
+                    // we need to capture the current settings
+                    Utilities.CategorySettingsFile cf = new Utilities.CategorySettingsFile(saveFileDialog1.FileName);
+                    populateCategoriesToSave(cf, treeView1.Nodes[0]);
+
+                    cf.Save(saveFileDialog1.FileName);
+
+                    MessageBox.Show("Current Settings saved as " + cf.Name + Environment.NewLine + "File: " + cf.Filename);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Unexpected error while attempting to save category list: " + ex.GetType().Name + ": " + ex.Message);
+            }
+        }
+
+        private void populateCategoriesToSave(Utilities.CategorySettingsFile cf, TreeNode node)
+        {
+            if (node.Tag is Category)
+            {
+                Category c = node.Tag as Category;
+                if (node.Checked) cf.Settings.Add(new Utilities.CategorySetting() { Name = c.Name, CategoryId = c.Id.IntegerValue, Enabled = true });
+            }
+
+            if (node.Nodes.Count>0)
+            {
+                foreach( TreeNode child in node.Nodes)
+                {
+                    populateCategoriesToSave(cf, child);
+                }
+            }
+        }
+
+        private void onCategorySettingChanged(object sender, EventArgs e)
+        {
+            if (cbSelectionSets.SelectedIndex == 0) return; // the select entry.
+
+            // first, set all nodes to blank.
+            updateChecks(treeView1.Nodes[0], false);
+
+            // now let's retrieve all of the nodes which are set.
+            HashSet<int> idsToEnable = new HashSet<int>();
+            Utilities.CategorySettingsFile cf = cbSelectionSets.SelectedItem as Utilities.CategorySettingsFile;
+            if (cf != null)
+            {
+                foreach( Utilities.CategorySetting cs in cf.Settings )
+                {
+                    if (cs.Enabled) idsToEnable.Add(cs.CategoryId);
+                }
+            }
+
+            updateChecksByInfo(treeView1.Nodes[0], idsToEnable);
+        }
+
+        private void updateChecks(TreeNode node, bool isChecked)
+        {
+            node.Checked = isChecked;
+
+            foreach( TreeNode child in node.Nodes)
+            {
+                updateChecks(child, isChecked);
+            }
+        }
+
+        private void updateChecksByInfo(TreeNode node, HashSet<int> idsToEnable)
+        {
+            Category c = node.Tag as Category;
+            if (c != null)
+            {
+                if (idsToEnable.Contains(c.Id.IntegerValue)) node.Checked = true;
+
+            }
+
+            foreach( TreeNode child in node.Nodes)
+            {
+                updateChecksByInfo(child, idsToEnable);
             }
         }
     }

@@ -11,4 +11,5 @@
   <ChangeType name="GeometryChange" color="Blue"/>
   <ChangeType name="NewElement" color="Green"/>
 </ColorChoices>
+  <DefaultSelection></DefaultSelection>
 </Settings>

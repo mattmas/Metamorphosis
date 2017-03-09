@@ -138,6 +138,7 @@
     </Compile>
     <Compile Include="SnapshotMaker.cs" />
     <Compile Include="Utilities\AVFUtility.cs" />
+    <Compile Include="Utilities\CategorySettings.cs" />
     <Compile Include="Utilities\RevitUtils.cs" />
     <Compile Include="Utilities\Settingcs.cs" />
     <Compile Include="Utilities\Utility.cs" />
