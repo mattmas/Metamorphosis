@@ -15,3 +15,13 @@ It has two components:
 [![Metamorphosis Video]https://youtu.be/uUcwH8GvlDY/0.jpg)](https://youtu.be/uUcwH8GvlDY)
 
 This tool was developed at the CORE Studio AEC Symposium and Hackathon, December 2016 (a 26-hour project).
+
+## Further Development
+Since the original hackathon, we've added a number of newer features, including:
+1. A Windows Installer
+2. Support for Revit 2017 (signed!), 2016 and 2015
+3. Enhanced Coloring/identifying of elements that changed.
+4. Configuration of colors
+5. Beginnings of API hooks for batch operation.
+
+Watch this space as we see where it goes...
