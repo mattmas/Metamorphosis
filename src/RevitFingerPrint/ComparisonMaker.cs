@@ -15,6 +15,7 @@ namespace Metamorphosis
         #region Declarations
         private Document _doc;
         private string _filename;
+        private string _dbFilename;
         private Dictionary<int, string> _parameterDict = new Dictionary<int, string>();
         private Dictionary<int, string> _valueDict = new Dictionary<int, string>();
         private Dictionary<string, int> _categoryCount = new Dictionary<string, int>();
@@ -41,6 +42,10 @@ namespace Metamorphosis
         {
             _doc = doc;
             _filename = previousFile;
+
+            _dbFilename = _filename;
+            // see: http://system.data.sqlite.org/index.html/info/bbdda6eae2
+            if (_filename.StartsWith(@"\\")) _dbFilename = @"\\" + _dbFilename;
         }
         #endregion
 
@@ -62,6 +67,14 @@ namespace Metamorphosis
         public void Serialize(string filename, IList<Change> changes)
         {
             System.IO.File.WriteAllText(filename, Serialize(changes));
+        }
+
+        public static ChangeSummary DeSerialize(string filename)
+        {
+            string content = System.IO.File.ReadAllText(filename);
+            ChangeSummary cs = Newtonsoft.Json.JsonConvert.DeserializeObject<ChangeSummary>(content);
+
+            return cs;
         }
 
         public string Serialize(IList<Change> changes)
@@ -491,7 +504,7 @@ namespace Metamorphosis
 
         private void readParameters()
         {
-            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _filename + ";Version=3;"))
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
                 conn.Open();
 
@@ -511,7 +524,7 @@ namespace Metamorphosis
 
         private void readValues()
         {
-            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _filename + ";Version=3;"))
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
                 conn.Open();
 
@@ -531,7 +544,7 @@ namespace Metamorphosis
 
         private void readElements()
         {
-            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _filename + ";Version=3;"))
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
                 conn.Open();
 
@@ -579,7 +592,7 @@ namespace Metamorphosis
 
         private void readGeometry()
         {
-            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _filename + ";Version=3;"))
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
                 conn.Open();
 

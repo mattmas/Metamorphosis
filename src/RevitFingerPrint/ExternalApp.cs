@@ -53,11 +53,20 @@ namespace Metamorphosis
             comp.LargeImage = getImage("Metamorphosis.Images.Compare-32.png");
             panel.AddItem(comp);
 
+            var prev = new PushButtonData("Previous", "Previous", System.Reflection.Assembly.GetExecutingAssembly().Location, "Metamorphosis.PreviousResults");
+            prev.ToolTip = "Load a previous comparison from the saved file.";
+            prev.LongDescription = "Load a previous comparison from a saved results file.";
+            prev.Image = getImage("Metamorphosis.Images.File-16.png");
+            prev.LargeImage = getImage("Metamorphosis.Images.File-32.png");
+            panel.AddItem(prev);
+
             // anything below here on the slideout?
             panel.AddSlideOut();
             var clear = new PushButtonData("ClearAVF", "Clear", System.Reflection.Assembly.GetExecutingAssembly().Location, "Metamorphosis.Commands.ClearAVF");
             clear.ToolTip = "Clear any AVF graphics from the current view.";
             clear.LongDescription = "Clear any Analysis Visualization Framework graphic primitives (faces, boxes, vectors) from the active view.";
+            clear.Image = getImage("Metamorphosis.Images.clear-16.png");
+            clear.LargeImage = getImage("Metamorphosis.Images.clear-32.png");
             panel.AddItem(clear);
 
         }

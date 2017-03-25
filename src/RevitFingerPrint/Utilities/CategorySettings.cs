@@ -77,6 +77,18 @@ namespace Metamorphosis.Utilities
 
         }
 
+        public static CategorySettingsFile GetFileByName(string name)
+        {
+            var list = GetFiles();
+
+            foreach( var item in list )
+            {
+                if (item.Name.ToUpper() == name.ToUpper()) return item;
+            }
+
+            throw new FileNotFoundException("Unable to find Category Settings File with name:'" + name + "' out of " + list.Count + " considered.");
+        }
+
         public static void GetFolders(out string central, out string user)
         {
             central = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Metamorphosis");

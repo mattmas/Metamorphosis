@@ -9,6 +9,7 @@ using Autodesk.Revit.UI;
 using System.Windows.Forms;
 using System.IO;
 using Autodesk.Revit.Attributes;
+using Metamorphosis.Utilities;
 
 namespace Metamorphosis
 {
@@ -125,6 +126,103 @@ namespace Metamorphosis
 
             return filename;
         }
+
+        /// <summary>
+        /// Batch operation from the outside...
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <param name="previousFile"></param>
+        /// <param name="targetFolder"></param>
+        /// <param name="dateStampResults"></param>
+        /// <param name="categoryConfig"></param>
+        /// <returns></returns>
+        public static string BatchCompare(Document doc, string previousFile, string targetFolder, bool dateStampResults, string categoryConfig, out int numChanges)
+        {
+            doc.Application.WriteJournalComment("Launching Batch Metamorphosis Compare:", false);
+            doc.Application.WriteJournalComment("  Previous File: " + previousFile, false);
+            doc.Application.WriteJournalComment("  TargetFolder:  " + targetFolder, false);
+            doc.Application.WriteJournalComment("  Date Stamp Results: " + dateStampResults, false);
+            doc.Application.WriteJournalComment("  Category Config: " + categoryConfig, false);
+
+            numChanges = -1;
+            if (previousFile == null)
+            {
+                Compare c = new Compare();
+                previousFile = c.GetFilenameHint(doc);
+            }
+
+            ComparisonMaker comparison = new ComparisonMaker(doc, previousFile);
+            comparison.AllCategories = (categoryConfig == null || categoryConfig.ToUpper() == "[ALL]");
+            if (!comparison.AllCategories)
+            {
+                if (categoryConfig.Contains("["))
+                {
+                    // figure that it's a special configuration.
+                    string typeName = categoryConfig.Trim('[', ']', ' ');
+                    CategoryType targetType = CategoryType.Model;
+
+                    if (Enum.TryParse<CategoryType>(typeName, out targetType))
+                    {
+                        foreach (Category cat in doc.Settings.Categories)
+                        {
+                            if (cat.CategoryType == targetType) comparison.RequestedCategories.Add(cat);
+                        }
+                    }
+                    else
+                    {
+                        throw new ApplicationException("Did not find dynamic Category Filter: " + typeName);
+
+                    }
+                }
+                else  // look for a file-based thing.
+                {
+                    // we need to go look for the stored settings with this name...
+                    var file = CategorySettingsFile.GetFileByName(categoryConfig);
+
+                    doc.Application.WriteJournalComment("Found CategorySettingsFile: " + file.Filename, false);
+                    comparison.RequestedCategories = new List<Category>();
+                    foreach (var setting in file.Settings)
+                    {
+                        if (setting.Enabled)
+                        {
+                            Category c = doc.Settings.Categories.get_Item((BuiltInCategory)setting.CategoryId);
+                            if (c != null) comparison.RequestedCategories.Add(c);
+                        }
+                    }
+                }
+                doc.Application.WriteJournalComment("Have " + comparison.RequestedCategories.Count + " categories requested for comparison.", false);
+                
+            }
+
+            string tmpFile = doc.Title;
+            if (tmpFile.ToUpper().Contains("_DETACHED")) tmpFile = tmpFile.ToLower().Replace("_detached", "");
+
+            doc.Application.WriteJournalComment("Starting comparison...", false);
+
+            IList<Objects.Change> changes = comparison.Compare();
+
+            doc.Application.WriteJournalComment("Found " + changes.Count + " change(s).", false);
+            numChanges = changes.Count;
+
+            if (changes.Count > 0)
+            {
+                string jsonFile = Path.Combine(targetFolder, Path.GetFileNameWithoutExtension(tmpFile) + "-Changes-Latest.json");
+                comparison.Serialize(jsonFile, changes);
+                if (dateStampResults)
+                {
+                    jsonFile = Path.Combine(targetFolder, Path.GetFileNameWithoutExtension(tmpFile) + "-Changes-" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".json");
+                    comparison.Serialize(jsonFile, changes);
+                }
+
+
+                return jsonFile;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
 
         private string getLastFilename(string folder, string filename)
         {

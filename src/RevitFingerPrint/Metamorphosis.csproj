@@ -50,6 +50,24 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2015|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug2015\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;REVIT2016</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release2015|AnyCPU'">
+    <OutputPath>bin\Release2015\</OutputPath>
+    <DefineConstants>TRACE;REVIT2016</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <Choose>
     <When Condition="'$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Release'">
       <ItemGroup>
@@ -71,6 +89,18 @@
         </Reference>
         <Reference Include="RevitAPIUI">
           <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2016\RevitAPIUI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="'$(Configuration)' == 'Debug2015' Or '$(Configuration)' == 'Release2015'">
+      <ItemGroup>
+        <Reference Include="RevitAPI">
+          <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2015\RevitAPI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="RevitAPIUI">
+          <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2015\RevitAPIUI.dll</HintPath>
           <Private>False</Private>
         </Reference>
       </ItemGroup>
@@ -101,6 +131,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands\ClearAVF.cs" />
+    <Compile Include="Commands\PreviousResults.cs" />
     <Compile Include="Commands\Compare.cs" />
     <Compile Include="Commands\Snapshot.cs" />
     <Compile Include="ComparisonMaker.cs" />
@@ -123,6 +154,12 @@
     </Compile>
     <Compile Include="UI\CompareForm.Designer.cs">
       <DependentUpon>CompareForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ComparePreviousForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\ComparePreviousForm.Designer.cs">
+      <DependentUpon>ComparePreviousForm.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\CompareResultsForm.cs">
       <SubType>Form</SubType>
@@ -151,6 +188,9 @@
     <EmbeddedResource Include="UI\CompareForm.resx">
       <DependentUpon>CompareForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="UI\ComparePreviousForm.resx">
+      <DependentUpon>ComparePreviousForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\CompareResultsForm.resx">
       <DependentUpon>CompareResultsForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -178,6 +218,12 @@
     <EmbeddedResource Include="Images\Compare-32.png" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Images\File-16.png" />
+    <EmbeddedResource Include="Images\File-32.png" />
+    <EmbeddedResource Include="Images\File-48.png" />
+    <EmbeddedResource Include="Images\clear-16.png" />
+    <EmbeddedResource Include="Images\clear-32.png" />
+    <EmbeddedResource Include="Images\clear-96.png" />
     <Content Include="Settings.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

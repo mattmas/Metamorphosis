@@ -18,6 +18,7 @@ namespace Metamorphosis
         private Dictionary<string, int> _valueDict = new Dictionary<string, int>();
         private Dictionary<string, string> _headerDict = new Dictionary<string, string>();
         private string _filename;
+        private string _dbFilename;
         private int _valueId = 0;
         private List<Level> _allLevels;
 
@@ -27,6 +28,10 @@ namespace Metamorphosis
         {
             _doc = doc;
             _filename = filename;
+
+            _dbFilename = _filename;
+            // see: http://system.data.sqlite.org/index.html/info/bbdda6eae2
+            if (_filename.StartsWith(@"\\")) _dbFilename = @"\\" + _dbFilename;
         }
         #endregion
 
@@ -52,7 +57,7 @@ namespace Metamorphosis
             //create the SQLite database file.
             SQLiteConnection.CreateFile(_filename);
 
-            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _filename + ";Version=3;"))
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
                 conn.Open();
 
@@ -141,7 +146,7 @@ namespace Metamorphosis
 
         private void updateIdTable(IList<Element> elements, bool isTypes)
         {
-            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _filename + ";Version=3;"))
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
                 conn.Open();
                 using (var transaction = conn.BeginTransaction())
@@ -169,7 +174,7 @@ namespace Metamorphosis
 
         private void updateHeaderTable()
         {
-            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _filename + ";Version=3;"))
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
                 conn.Open();
                 using (var transaction = conn.BeginTransaction())
@@ -189,7 +194,7 @@ namespace Metamorphosis
         }
         private void updateAttributeTable()
         {
-            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _filename + ";Version=3;"))
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
                 conn.Open();
                 using (var transaction = conn.BeginTransaction())
@@ -211,7 +216,7 @@ namespace Metamorphosis
 
         private void updateValueTable()
         {
-            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _filename + ";Version=3;"))
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
                 conn.Open();
                 using (var transaction = conn.BeginTransaction())
@@ -234,7 +239,7 @@ namespace Metamorphosis
         private void updateEntityAttributeValues(IList<Element> elems)
         {
 
-            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _filename + ";Version=3;"))
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
                 conn.Open();
                 using (var transaction = conn.BeginTransaction())
@@ -317,7 +322,7 @@ namespace Metamorphosis
 
         private void updateGeometryTable(IList<Element> elements)
         {
-            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _filename + ";Version=3;"))
+            using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
                 conn.Open();
                 using (var transaction = conn.BeginTransaction())

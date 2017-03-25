@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="Metamorphosis for Revit" Language="1033" Version="1.0.7.0" Manufacturer="NYC Hackathon Team 14" UpgradeCode="cbce84ae-9576-496e-9cbc-363956edbf13">
+	<Product Id="*" Name="Metamorphosis for Revit" Language="1033" Version="1.0.8.0" Manufacturer="NYC Hackathon Team 14" UpgradeCode="cbce84ae-9576-496e-9cbc-363956edbf13">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine"  />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
@@ -29,34 +29,53 @@
       <ComponentRef Id="SqliteInterop2016x64.dll"/>
       <ComponentRef Id="Settings2016.xml"/>
     </Feature>
+    <Feature Id="Revit2015Install" Title="Revit 2015" Level="1">
+      <ComponentRef Id="Addin2015" />
+      <ComponentRef Id="MetamorphosisDLL2015" />
+      <ComponentRef Id="NewtonSoft2015" />
+      <ComponentRef Id="SQLite2015" />
+      <ComponentRef Id="SqliteInterop2015x86.dll"/>
+      <ComponentRef Id="SqliteInterop2015x64.dll"/>
+      <ComponentRef Id="Settings2015.xml"/>
+    </Feature>
   
 	</Product>
 
   <!-- Directory Structure for install -->
-	<Fragment>
-		<Directory Id="TARGETDIR" Name="SourceDir">
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="CommonAppDataFolder" Name="ProgramData">
         <Directory Id="AUTODESKFOLDER"  Name="Autodesk">
           <Directory Id="REVITFOLDER" Name="Revit" >
             <Directory Id="ADDINSFOLDER" Name="Addins">
+
               <Directory Id="ADDINS2017" Name="2017">
-              <Directory Id="BUNDLEFOLDER2017" Name="Metamorphosis" >
-                <Directory Id="SQLiteInterop2017x86" Name="x86"/>
-                <Directory Id="SQLiteInterop2017x64" Name="x64"/>
+                <Directory Id="BUNDLEFOLDER2017" Name="Metamorphosis" >
+                  <Directory Id="SQLiteInterop2017x86" Name="x86"/>
+                  <Directory Id="SQLiteInterop2017x64" Name="x64"/>
+                </Directory>
               </Directory>
-            </Directory>
+
               <Directory Id="ADDINS2016" Name="2016">
                 <Directory Id="BUNDLEFOLDER2016" Name="Metamorphosis" >
-                <Directory Id="SQLiteInterop2016x86" Name="x86"/>
-                <Directory Id="SQLiteInterop2016x64" Name="x64"/>
+                  <Directory Id="SQLiteInterop2016x86" Name="x86"/>
+                  <Directory Id="SQLiteInterop2016x64" Name="x64"/>
+                </Directory>
               </Directory>
+
+              <Directory Id="ADDINS2015" Name="2015">
+                <Directory Id="BUNDLEFOLDER2015" Name="Metamorphosis" >
+                  <Directory Id="SQLiteInterop2015x86" Name="x86"/>
+                  <Directory Id="SQLiteInterop2015x64" Name="x64"/>
+                </Directory>
               </Directory>
+
             </Directory>
           </Directory>
         </Directory>
       </Directory>
-		</Directory>
-	</Fragment>
+    </Directory>
+  </Fragment>
 
 	<Fragment>
 		
@@ -139,9 +158,49 @@
     </DirectoryRef>
 
 
-  
+    <!-- 2015-->
+    <DirectoryRef Id="ADDINS2015">
+      <Component Id="Addin2015" Guid="{9A07FB20-0724-4BDB-A229-6FEE28167A8F}" DiskId="1">
+        <CreateFolder/>
+        <File Id="Metamorphosis.addin2015" Name="Metamorphosis.addin" Source="$(var.ProjectDir)Metamorphosis.addin" Checksum="no"/>
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="BUNDLEFOLDER2015">
+      <Component Id="MetamorphosisDLL2015" Guid="{00089945-B6DA-466E-8CC4-0C1E33BC476D}" DiskId="1">
+        <CreateFolder/>
+        <RemoveFolder Id="RemoveBundle2015" On="uninstall"/>
+        <File Id="Metamorphosis.dll2015" Name="Metamorphosis.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release2015\Metamorphosis.dll" Checksum="no"/>
+      </Component>
+      <Component Id="NewtonSoft2015" Guid="{74A5A363-9B8D-4CFD-9F3A-C9E744CDC116}" DiskId="1">
+        <File Id="NewtonSoft2015" Name="Newtonsoft.Json.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release2015\Newtonsoft.Json.dll" Checksum="no"/>
+      </Component>
+      <Component Id="SQLite2015" Guid="{F58F93C2-C8EB-428F-AB9F-B4032CE23079}" DiskId="1">
+        <File Id="SQLite2015" Name="System.Data.SQLite.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release2015\System.Data.SQLite.dll" Checksum="no"/>
+      </Component>
+      <Component Id="Settings2015.xml" Guid="{3FEC46DC-9363-488C-B701-0A1EF0628C60}" DiskId="1">
+        <File Id="Settings2015" Name="Settings.xml" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release2015\Settings.xml" Checksum="no"/>
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="SQLiteInterop2015x86">
+      <Component Id="SqliteInterop2015x86.dll" Guid="{2D7C83D9-3A60-4F13-BB40-8FF68455348F}" DiskId="1">
+        <CreateFolder/>
+        <RemoveFolder Id="RemoveSqliteInterop2015x86" On="uninstall"/>
+        <File Id="SQLite.Interop.dll2015x86" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release2015\x86\SQLite.Interop.dll" Checksum="no"/>
+      </Component>
+    </DirectoryRef>
+    <DirectoryRef Id="SQLiteInterop2015x64">
+      <Component Id="SqliteInterop2015x64.dll" Guid="{60B256A2-40CC-4A1B-B771-1E78AE1B74E1}" DiskId="1">
+        <CreateFolder/>
+        <RemoveFolder Id="RemoveSqliteInterop2015x64" On="uninstall"/>
+        <File Id="SQLite.Interop.dll2015x64" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release2015\x64\SQLite.Interop.dll" Checksum="no"/>
+      </Component>
+    </DirectoryRef>
 
 
-		
-	</Fragment>
+
+
+
+  </Fragment>
 </Wix>

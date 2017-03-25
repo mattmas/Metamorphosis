@@ -20,6 +20,7 @@ namespace Metamorphosis
             
            try
             {
+               
                 Document doc = commandData.Application.ActiveUIDocument.Document;
 
                 IList<Document> inMemory = Utilities.RevitUtils.GetProjectsInMemory(commandData.Application.Application);
@@ -28,7 +29,11 @@ namespace Metamorphosis
                 if (form.ShowDialog() != DialogResult.OK) return Result.Cancelled;
 
                 string filename = form.Filename;
-               
+
+                //store for the future? seems like there are suddenly problems with reading this info back...
+                commandData.JournalData.Add("DocumentName", form.SelectedDocument.Title);
+                commandData.JournalData.Add("Filename", form.Filename);
+
                 SnapshotMaker maker = new SnapshotMaker(form.SelectedDocument, form.Filename);
                 maker.Export();
 
@@ -36,6 +41,8 @@ namespace Metamorphosis
                 td.MainContent = "The snapshot file has been created.";
                 td.ExpandedContent = "File: " + filename + Environment.NewLine + "Duration: " + maker.Duration.TotalMinutes.ToString("F2") + " minutes.";
                 td.Show();
+
+                
 
                 return Result.Succeeded;
             }
@@ -50,6 +57,22 @@ namespace Metamorphosis
                 return Result.Failed;
             }
             
+        }
+
+        /// <summary>
+        /// Batch version, so that others can call it.
+        /// </summary>
+        /// <param name="doc"></param>
+        /// <param name="filename"></param>
+        public static void Export(Document doc, string filename)
+        {
+            doc.Application.WriteJournalComment("Launching Batch Metamorphosis Snapshot...", false);
+            doc.Application.WriteJournalComment("  Filename: " + filename, false);
+            SnapshotMaker maker = new SnapshotMaker(doc, filename);
+            maker.Export();
+
+            doc.Application.WriteJournalComment("Snapshot completed. Duration:  " + maker.Duration, false);
+
         }
     }
 }
