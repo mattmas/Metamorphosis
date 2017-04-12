@@ -21,6 +21,7 @@ namespace Metamorphosis
             
            try
             {
+                ExternalApp.FirstTimeRun(); // analytics
                 Document doc = commandData.Application.ActiveUIDocument.Document;
 
                 IList<Document> allDocs = Utilities.RevitUtils.GetCurrentDocumentAndLinks(doc);
@@ -111,6 +112,7 @@ namespace Metamorphosis
                     {
                         string modelPath = ModelPathUtils.ConvertModelPathToUserVisiblePath(mp);
                         folder = Path.GetDirectoryName(modelPath);
+                        if (Directory.Exists(Path.Combine(folder, "Snapshots"))) folder = Path.Combine(folder, "Snapshots");  // encourage this.
                         filename = Path.GetFileNameWithoutExtension(modelPath);
                     }
                 }
@@ -143,6 +145,7 @@ namespace Metamorphosis
             doc.Application.WriteJournalComment("  TargetFolder:  " + targetFolder, false);
             doc.Application.WriteJournalComment("  Date Stamp Results: " + dateStampResults, false);
             doc.Application.WriteJournalComment("  Category Config: " + categoryConfig, false);
+            ExternalApp.FirstTimeRun(); // analytics
 
             numChanges = -1;
             if (previousFile == null)
@@ -152,7 +155,7 @@ namespace Metamorphosis
             }
 
             ComparisonMaker comparison = new ComparisonMaker(doc, previousFile);
-            comparison.AllCategories = (categoryConfig == null || categoryConfig.ToUpper() == "[ALL]");
+            comparison.AllCategories = (categoryConfig == null || categoryConfig.ToUpper() == "[ALL]" || categoryConfig.ToUpper() == "ALL");
             if (!comparison.AllCategories)
             {
                 if (categoryConfig.Contains("["))

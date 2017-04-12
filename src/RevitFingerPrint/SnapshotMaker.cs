@@ -21,6 +21,7 @@ namespace Metamorphosis
         private string _dbFilename;
         private int _valueId = 0;
         private List<Level> _allLevels;
+        private Utilities.Settings.LogLevel _logLevel = Utilities.Settings.LogLevel.Basic;
 
 
         #region Constructor
@@ -32,6 +33,8 @@ namespace Metamorphosis
             _dbFilename = _filename;
             // see: http://system.data.sqlite.org/index.html/info/bbdda6eae2
             if (_filename.StartsWith(@"\\")) _dbFilename = @"\\" + _dbFilename;
+
+            _logLevel = Utilities.Settings.GetLogLevel();
         }
         #endregion
 
@@ -62,7 +65,7 @@ namespace Metamorphosis
                 conn.Open();
 
                 // create the table structure from the sql instructions.
-                string[] lines = readSQLDef();
+                string[] lines = Utilities.DataUtility.ReadSQLScript("Metamorphosis.databaseFormat.txt");
 
                 foreach (string sql in lines)
                 {
@@ -305,20 +308,7 @@ namespace Metamorphosis
         }
 
 
-        private string[] readSQLDef()
-        {
-            Stream s = Assembly.GetExecutingAssembly().GetManifestResourceStream("Metamorphosis.databaseFormat.txt");
-
-            string sql = null;
-            using (StreamReader sr = new StreamReader(s))
-            {
-                sql = sr.ReadToEnd();
-            }
-
-            return sql.Split(new char[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-
-            
-        }
+     
 
         private void updateGeometryTable(IList<Element> elements)
         {
@@ -397,7 +387,22 @@ namespace Metamorphosis
                                 }
                                 else
                                 {
-                                    if (box == null) continue; // not sure what this is???
+                                    if (box == null)
+                                    {
+                                        // ok, special case one: Grid
+                                        if (e is Grid)
+                                        {
+                                            Grid g = e as Grid;
+                                            p1 = g.Curve.GetEndPoint(0);
+                                            XYZ p2 = g.Curve.GetEndPoint(1);
+                                            lp = Utilities.RevitUtils.SerializePoint(p1);
+                                            lp2 = Utilities.RevitUtils.SerializePoint(p2);
+                                        }
+                                        else
+                                        {
+                                            continue; // not sure what this is???
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -408,7 +413,9 @@ namespace Metamorphosis
                         if (lev != null) levName = lev.Name;
 
                             var cmd = conn.CreateCommand();
-                        cmd.CommandText = String.Format("INSERT INTO _objects_geom (id,BoundingBoxMin,BoundingBoxMax,Location,Location2,Level,Rotation) VALUES({0},'{1}','{2}','{3}','{4}','{5}',{6})", e.Id.IntegerValue, bbMin, bbMax, lp, lp2, escapeQuote(levName), rotation);
+                        cmd.CommandText = String.Format("INSERT INTO _objects_geom (id,BoundingBoxMin,BoundingBoxMax,Location,Location2,Level,Rotation) VALUES({0},'{1}','{2}','{3}','{4}','{5}',{6})", e.Id.IntegerValue, bbMin, bbMax, lp, lp2, escapeQuote(levName), rotation.ToString(CultureInfo.InvariantCulture));
+
+                        if (_logLevel == Utilities.Settings.LogLevel.Verbose) _doc.Application.WriteJournalComment(cmd.CommandText,false);
 
                         cmd.ExecuteNonQuery();
                     }

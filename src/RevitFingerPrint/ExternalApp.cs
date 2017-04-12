@@ -12,6 +12,9 @@ namespace Metamorphosis
 {
     public class ExternalApp : IExternalApplication
     {
+        private static UIControlledApplication _App;
+        private static bool _Started = false;
+
         public Result OnShutdown(UIControlledApplication application)
         {
             return Result.Succeeded;
@@ -21,6 +24,7 @@ namespace Metamorphosis
         {
             try
             {
+                _App = application;
                 buildUI(application);
                 return Result.Succeeded;
             }
@@ -31,6 +35,40 @@ namespace Metamorphosis
                 td.Show();
                 return Result.Failed;
             }
+        }
+
+        public static string GetUserInfo()
+        {
+            // make a reasonably unique identifier - but pretty anonymous. This is for analytics tracking.
+            return (Environment.UserDomainName + "\\" + Environment.UserName).GetHashCode().ToString();
+        }
+
+        public static void FirstTimeRun()
+        {
+            if (_Started) return;
+            //otherwise, record the fact that we started, for analytics purposes.
+            startup();
+        }
+
+        private static void startup()
+        {
+            _App.ControlledApplication.WriteJournalComment("Starting up Revit Metamorphosis...", false);
+            _Started = true;
+        }
+
+        public static bool AnalyticsOptIn()
+        {
+
+            //NOTE: We do collect anonymized analytics with our official binary build (# of times each feature was launched).
+            // we do this just to have a sense of whether anyone is using this application.
+            // if you would still like to opt out of this, please create an "optout.txt" file in Metamorphosis folder.
+            // if you have concerns about the analytics, and would like to see the analytical information we collect, please reach out to:
+            // mmason (at) rand.com
+
+            string path = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            string optOutFile = System.IO.Path.Combine(path, "optout.txt");
+
+            return !System.IO.File.Exists(optOutFile);
         }
 
         private void buildUI(UIControlledApplication app)

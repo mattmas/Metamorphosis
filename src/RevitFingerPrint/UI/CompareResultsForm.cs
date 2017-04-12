@@ -212,6 +212,10 @@ namespace Metamorphosis.UI
                         BoundingBoxXYZ box = Utilities.RevitUtils.DeserializeBoundingBox(item.BoundingBoxDescription);
                         if (box != null)
                         {
+
+                        // take care of boxes that are smaller than the curve tolerance.
+                        if (Utilities.RevitUtils.IsBoxTooSmall(_uiDoc.Application.Application, box)) box = Utilities.RevitUtils.GrowBox(_uiDoc.Application.Application, box, _uiDoc.Application.Application.ShortCurveTolerance * 2.0);
+
                             Solid s = Utilities.RevitUtils.CreateSolidFromBox(_uiDoc.Application.Application, box);
                         if (s != null)
                         {
@@ -290,7 +294,7 @@ namespace Metamorphosis.UI
 
                 IList<ElementId> ids = collectIds(group.Value);
 
-                overrideColor = Utilities.Settingcs.GetColor(group.Key);
+                overrideColor = Utilities.Settings.GetColor(group.Key);
 
                 
                 ogs.SetProjectionFillColor(overrideColor);

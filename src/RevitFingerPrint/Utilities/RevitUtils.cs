@@ -210,6 +210,44 @@ namespace Metamorphosis.Utilities
 #endif
         }
 
+        internal static bool IsBoxTooSmall( Autodesk.Revit.ApplicationServices.Application app, BoundingBoxXYZ box)
+        {
+            // we need to determine if any of the lines are less than the curve tolerance.
+            XYZ A1 = box.Min;
+            XYZ A2 = new XYZ(box.Max.X, box.Min.Y, box.Min.Z);
+            XYZ A3 = new XYZ(box.Max.X, box.Max.Y, box.Min.Z);
+            XYZ A4 = new XYZ(box.Min.X, box.Max.Y, box.Min.Z);
+
+            if (A1.DistanceTo(A2) < app.ShortCurveTolerance) return true;
+            if (A2.DistanceTo(A3) < app.ShortCurveTolerance) return true;
+            if (A3.DistanceTo(A4) < app.ShortCurveTolerance) return true;
+            if (A4.DistanceTo(A1) < app.ShortCurveTolerance) return true;
+            if (Math.Abs(box.Max.Z - box.Min.Z) < app.ShortCurveTolerance) return true;
+
+            // if we got here, we're in the clear.
+            return false;
+        }
+
+        internal static BoundingBoxXYZ GrowBox( Autodesk.Revit.ApplicationServices.Application app, BoundingBoxXYZ box, double howMuch)
+        {
+            BoundingBoxXYZ newBox = null;
+            for (int i=0; i<10;i++)
+            {
+                double offset = (double)i * howMuch;
+                newBox = new BoundingBoxXYZ()
+                {
+                    Min = new XYZ(box.Min.X - offset, box.Min.Y - offset, box.Min.Z - offset),
+                    Max = new XYZ(box.Max.X + offset, box.Max.Y + offset, box.Max.Z + offset)
+                };
+
+                if (IsBoxTooSmall(app, newBox) == false) return newBox;
+            }
+
+            // if we got here, we were unable to make it happy, but pass it back anyway?
+            app.WriteJournalComment("Metamorphosis: Odd: Unable to grow box by " + howMuch + " and make it appropriate compared to " + app.ShortCurveTolerance, false);
+            return newBox;
+        }
+
         internal static Solid CreateSolidFromBox( Autodesk.Revit.ApplicationServices.Application app, BoundingBoxXYZ box)
         {
             // create a set of curves from the base of the box.

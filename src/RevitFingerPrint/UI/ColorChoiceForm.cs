@@ -26,7 +26,7 @@ namespace Metamorphosis.UI
                 TreeNode tn = _root.Nodes.Add( typ.ToString(), typ.ToString());
                 tn.Tag = typ;
 
-                Autodesk.Revit.DB.Color c = Utilities.Settingcs.GetColor(typ);
+                Autodesk.Revit.DB.Color c = Utilities.Settings.GetColor(typ);
 
                 tn.BackColor = Color.FromArgb(c.Red, c.Green, c.Blue);
                 tn.Checked = true;

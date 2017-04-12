@@ -1,0 +1,2 @@
+﻿CREATE TABLE "_objects_header"("id" INTEGER PRIMARY KEY,"keyword" TEXT, "value" BLOB);
+INSERT INTO _objects_header (keyword,value) VALUES("SchemaVersion","1.0"),("Model","Unknown"),("ExportVersion","0.9"),("ExportDate",""),("ExportDateTicks","0"),("ExportingUser","UNKNOWN"),("MachineName","UNKNOWN")

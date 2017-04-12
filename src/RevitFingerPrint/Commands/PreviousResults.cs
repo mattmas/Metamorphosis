@@ -21,6 +21,7 @@ namespace Metamorphosis
             
            try
             {
+                ExternalApp.FirstTimeRun(); // analytics
                 Document doc = commandData.Application.ActiveUIDocument.Document;
 
                 IList<Document> allDocs = Utilities.RevitUtils.GetCurrentDocumentAndLinks(doc);

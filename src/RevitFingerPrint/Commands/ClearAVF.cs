@@ -17,6 +17,7 @@ namespace Metamorphosis.Commands
         {
            try
             {
+                ExternalApp.FirstTimeRun(); // analytics
                 if (commandData.Application.ActiveUIDocument != null)
                 {
                     Utilities.AVFUtility.Clear(commandData.Application.ActiveUIDocument);

@@ -12,7 +12,7 @@ using Autodesk.Revit.Attributes;
 
 namespace Metamorphosis
 {
-    [Transaction(TransactionMode.Manual)]
+    [Transaction(TransactionMode.Manual), Journaling(JournalingMode.UsingCommandData)]
     public class Snapshot : IExternalCommand
     {
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
@@ -20,7 +20,8 @@ namespace Metamorphosis
             
            try
             {
-               
+
+                ExternalApp.FirstTimeRun(); // analytics
                 Document doc = commandData.Application.ActiveUIDocument.Document;
 
                 IList<Document> inMemory = Utilities.RevitUtils.GetProjectsInMemory(commandData.Application.Application);
@@ -45,7 +46,7 @@ namespace Metamorphosis
                 
 
                 return Result.Succeeded;
-            }
+            }            
             catch (ApplicationException aex)
             {
                 MessageBox.Show(aex.Message);

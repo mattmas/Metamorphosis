@@ -12,4 +12,6 @@
   <ChangeType name="NewElement" color="Green"/>
 </ColorChoices>
   <DefaultSelection></DefaultSelection>
+  <!-- Loglevel: Basic or Verbose -->
+  <LogLevel>Basic</LogLevel>
 </Settings>

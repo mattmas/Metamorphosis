@@ -27,6 +27,7 @@ namespace Metamorphosis.UI
 
         private IFilenameHint _hint;
         private Document _doc;
+        private bool _suspendTreeUpdates = false;
         #endregion
 
         public CompareForm(Document doc, IList<Document> allDocs, IFilenameHint hint)
@@ -103,6 +104,7 @@ namespace Metamorphosis.UI
                 if (types.ContainsKey(c.CategoryType) == false)
                 {
                     TreeNode catNode = new TreeNode(c.CategoryType.ToString());
+                    catNode.Tag = c.CategoryType;
                     types.Add(c.CategoryType, catNode);
                     root.Nodes.Add(catNode);
                 }
@@ -129,7 +131,7 @@ namespace Metamorphosis.UI
                 foreach (var item in files) cbSelectionSets.Items.Add(item);                
                 
                 //set the default value
-                string defaultSet = Utilities.Settingcs.GetDefaultCategories();
+                string defaultSet = Utilities.Settings.GetDefaultCategories();
                 if (defaultSet != null)
                 {
                     var item = files.FirstOrDefault(f => f.Name.ToUpper() == defaultSet.ToUpper());
@@ -149,10 +151,25 @@ namespace Metamorphosis.UI
 
         private void onAfterCheck(object sender, TreeViewEventArgs e)
         {
+            if (_suspendTreeUpdates) return;
+
             foreach( TreeNode child in e.Node.Nodes)
             {
                 child.Checked = e.Node.Checked;
             }
+
+            // if it is an un-check, we also want to uncheck the parent, but not trigger the same update backwards.
+            if (e.Node.Checked == false)
+            {
+                if ((e.Node.Parent != null) && (e.Node.Parent.Checked))
+                {
+                    _suspendTreeUpdates = true;
+                    e.Node.Parent.Checked = false;
+                }
+            }
+
+            _suspendTreeUpdates = false;
+
         }
 
         private void collectCategories(TreeNode node)
@@ -226,6 +243,20 @@ namespace Metamorphosis.UI
                 if (node.Checked) cf.Settings.Add(new Utilities.CategorySetting() { Name = c.Name, CategoryId = c.Id.IntegerValue, Enabled = true });
             }
 
+            // let's handle CategoryType level selections differently. Store just the categorytype, and none of the children.
+            if (node.Tag is CategoryType)
+            {
+                CategoryType cType = (CategoryType)node.Tag;
+                if (node.Checked && areAllChildrenChecked(node))
+                {
+                    // store as negative, to use as an indicator.
+                    cf.Settings.Add(new Utilities.CategorySetting() { Name = "Type:" + cType, CategoryId = (int)cType, Enabled = true });
+
+                    // in this case, there's no need to store individuals, and the individuals might change over time.
+                    return;
+                }
+            }
+
             if (node.Nodes.Count>0)
             {
                 foreach( TreeNode child in node.Nodes)
@@ -233,6 +264,21 @@ namespace Metamorphosis.UI
                     populateCategoriesToSave(cf, child);
                 }
             }
+        }
+
+        private bool areAllChildrenChecked(TreeNode parent)
+        {
+            foreach( TreeNode tn in parent.Nodes )
+            {
+                if (tn.Checked == false) return false;
+                if (tn.Nodes.Count>0)
+                {
+                    if (!areAllChildrenChecked(tn)) return false;
+                }
+            }
+
+            // if we got this far, they're all ok.
+            return true;
         }
 
         private void onCategorySettingChanged(object sender, EventArgs e)
@@ -244,16 +290,26 @@ namespace Metamorphosis.UI
 
             // now let's retrieve all of the nodes which are set.
             HashSet<int> idsToEnable = new HashSet<int>();
+            HashSet<int> typesToEnable = new HashSet<int>();
             Utilities.CategorySettingsFile cf = cbSelectionSets.SelectedItem as Utilities.CategorySettingsFile;
             if (cf != null)
             {
                 foreach( Utilities.CategorySetting cs in cf.Settings )
                 {
-                    if (cs.Enabled) idsToEnable.Add(cs.CategoryId);
+                    // look specifically for types first.
+                    if (cs.Name.ToUpper().StartsWith("TYPE:"))
+                    {
+                        if (cs.Enabled) typesToEnable.Add(cs.CategoryId);
+                    }
+                    else
+                    {
+                        // regular categories.
+                        if (cs.Enabled) idsToEnable.Add(cs.CategoryId);
+                    }
                 }
             }
-
-            updateChecksByInfo(treeView1.Nodes[0], idsToEnable);
+            
+            updateChecksByInfo(treeView1.Nodes[0], idsToEnable, typesToEnable);
         }
 
         private void updateChecks(TreeNode node, bool isChecked)
@@ -266,7 +322,7 @@ namespace Metamorphosis.UI
             }
         }
 
-        private void updateChecksByInfo(TreeNode node, HashSet<int> idsToEnable)
+        private void updateChecksByInfo(TreeNode node, HashSet<int> idsToEnable, HashSet<int> typesToEnable)
         {
             Category c = node.Tag as Category;
             if (c != null)
@@ -274,10 +330,18 @@ namespace Metamorphosis.UI
                 if (idsToEnable.Contains(c.Id.IntegerValue)) node.Checked = true;
 
             }
+            if (node.Tag is CategoryType)
+            {
+                CategoryType cType = (CategoryType)node.Tag;
+                if (typesToEnable.Contains((int)cType))
+                {
+                    node.Checked = true;
+                }
+            }
 
             foreach( TreeNode child in node.Nodes)
             {
-                updateChecksByInfo(child, idsToEnable);
+                updateChecksByInfo(child, idsToEnable, typesToEnable);
             }
         }
     }

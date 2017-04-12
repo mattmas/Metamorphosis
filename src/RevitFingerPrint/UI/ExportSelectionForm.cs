@@ -47,9 +47,31 @@ namespace Metamorphosis.UI
             if (doc != null)
             {
                 string filename = Path.GetFileNameWithoutExtension(doc.PathName);
+                if (doc.IsWorkshared && (! doc.IsDetached))
+                {
+                    try
+                    {
+                       
+                            var mp = doc.GetWorksharingCentralModelPath();
+                            string centralPath = Autodesk.Revit.DB.ModelPathUtils.ConvertModelPathToUserVisiblePath(mp);
+                            if ((mp.ServerPath == false) && System.IO.Path.IsPathRooted(centralPath))
+                            {
+                                string folder = Path.GetDirectoryName(centralPath);
+                                string baseName = Path.GetFileNameWithoutExtension(centralPath);
+                                filename = Path.Combine(folder, "Snapshots", baseName + "_" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".sdb");
+                            }
+                       
+                    }
+                    catch { }
+                }
+                else
+                {
+                    filename = Path.Combine(Path.GetDirectoryName(doc.PathName), filename + "_" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".sdb");
+                }
+                
 
 
-                filename = Path.Combine(Path.GetDirectoryName(doc.PathName), filename + "_" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".sdb");
+                
 
                 return filename;
             }

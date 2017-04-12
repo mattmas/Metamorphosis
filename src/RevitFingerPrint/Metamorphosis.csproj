@@ -176,6 +176,7 @@
     <Compile Include="SnapshotMaker.cs" />
     <Compile Include="Utilities\AVFUtility.cs" />
     <Compile Include="Utilities\CategorySettings.cs" />
+    <Compile Include="Utilities\DataUtility.cs" />
     <Compile Include="Utilities\RevitUtils.cs" />
     <Compile Include="Utilities\Settingcs.cs" />
     <Compile Include="Utilities\Utility.cs" />
@@ -224,6 +225,7 @@
     <EmbeddedResource Include="Images\clear-16.png" />
     <EmbeddedResource Include="Images\clear-32.png" />
     <EmbeddedResource Include="Images\clear-96.png" />
+    <EmbeddedResource Include="DBScript\UpgradeToV1.txt" />
     <Content Include="Settings.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

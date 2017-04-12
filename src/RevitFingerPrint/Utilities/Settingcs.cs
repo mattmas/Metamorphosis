@@ -9,8 +9,9 @@ using System.Xml;
 
 namespace Metamorphosis.Utilities
 {
-    internal static class Settingcs
+    internal static class Settings
     {
+        internal enum LogLevel { Basic, Verbose};
         private static XmlDocument _doc;
 
 
@@ -76,10 +77,36 @@ namespace Metamorphosis.Utilities
 
             if (elem == null) return null;
 
-            if (String.IsNullOrEmpty(elem.Value)) return null;
+            if (String.IsNullOrEmpty(elem.InnerText)) return null;
 
-            return elem.Value;
+            return elem.InnerText;
 
+        }
+
+        public static LogLevel GetLogLevel()
+        {
+            readData();
+
+
+            if (_doc == null)
+            {
+                System.Diagnostics.Debug.WriteLine("Did not find settings document!");
+                return LogLevel.Basic;
+            }
+
+            XmlElement elem = _doc.SelectSingleNode("/Settings/LogLevel") as XmlElement;
+
+            if (elem == null) return LogLevel.Basic;
+
+            if (String.IsNullOrEmpty(elem.InnerText)) return LogLevel.Basic;
+
+            LogLevel level = LogLevel.Basic;
+            if (Enum.TryParse<LogLevel>( elem.InnerText, out level))
+            {
+                return level;
+            }
+
+            return LogLevel.Basic;
         }
 
         private static void readData()

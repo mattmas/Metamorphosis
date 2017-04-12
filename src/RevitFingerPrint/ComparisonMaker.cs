@@ -17,6 +17,7 @@ namespace Metamorphosis
         private string _filename;
         private string _dbFilename;
         private Dictionary<int, string> _parameterDict = new Dictionary<int, string>();
+        private Dictionary<string, string> _headerDict = new Dictionary<string, string>();
         private Dictionary<int, string> _valueDict = new Dictionary<int, string>();
         private Dictionary<string, int> _categoryCount = new Dictionary<string, int>();
         private HashSet<string> _requestedCategoryNames = new HashSet<string>();
@@ -46,6 +47,7 @@ namespace Metamorphosis
             _dbFilename = _filename;
             // see: http://system.data.sqlite.org/index.html/info/bbdda6eae2
             if (_filename.StartsWith(@"\\")) _dbFilename = @"\\" + _dbFilename;
+            doc.Application.WriteJournalComment("Previous File DB: " + _dbFilename, false);
         }
         #endregion
 
@@ -472,6 +474,16 @@ namespace Metamorphosis
                                 revitElem.LocationPoint2 = lc.Curve.GetEndPoint(1);
                             }
                         }
+                        else
+                        {
+                            // special case
+                            if (e is Grid)
+                            {
+                                Grid g = e as Grid;
+                                revitElem.LocationPoint = g.Curve.GetEndPoint(0);
+                                revitElem.LocationPoint2 = g.Curve.GetEndPoint(1);
+                            }
+                        }
                     }
 
 
@@ -496,10 +508,68 @@ namespace Metamorphosis
         }
         private void readPrevious()
         {
+            readHeader();
             readParameters();
             readValues();
             readElements();
             readGeometry();
+        }
+
+        private void readHeader()
+        {
+            try
+            {
+                using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3"))
+                {
+                    conn.Open();
+
+                    // first see if there is a headers table.
+                    var cmd = conn.CreateCommand();
+                    cmd.CommandText = "select name from sqlite_master WHERE type='table' and name='_objects_header'";
+                    object table = cmd.ExecuteScalar();
+                    Version schemaVersion = new Version(0, 0);
+                    if (table != null)
+                    {
+                        // there are headers, check the schema version
+                        var sv = conn.CreateCommand();
+                        sv.CommandText = "select value from _objects_header WHERE keyword=\"SchemaVersion\"";
+                        object o = sv.ExecuteScalar();
+                        if (o != null)
+                        {
+                            string val = o.ToString();
+                            if (o is byte[]) val = UTF8Encoding.ASCII.GetString(o as byte[]); // not sure why we get a byte array, but it happens.
+
+                            if (Version.TryParse(val, out schemaVersion))
+                            {
+                              
+                            }
+                        }
+                        
+                    }
+                    if (schemaVersion < Utilities.DataUtility.CurrentVersion)
+                    {
+                        Utilities.DataUtility.UpgradeFrom(conn, schemaVersion, (msg) => { _doc.Application.WriteJournalComment(msg, false); });
+                    }
+
+                    // now we can get around to reading the actual headers.
+                    var headCmd = conn.CreateCommand();
+                    headCmd.CommandText = "select * from _objects_header";
+                    SQLiteDataReader reader = headCmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        string key = reader.GetString(1);
+                        string val = reader.GetString(2);
+                        _headerDict[key] = val;
+                    }
+
+                    conn.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                _doc.Application.WriteJournalComment("Error reading headers: " + ex.GetType().Name + ": " + ex.Message, false);
+            }
+           
         }
 
         private void readParameters()
