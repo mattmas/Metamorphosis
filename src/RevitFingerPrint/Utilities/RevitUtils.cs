@@ -184,7 +184,8 @@ namespace Metamorphosis.Utilities
 
         internal static void GetExtents(Autodesk.Revit.UI.UIApplication uiApp, out int x, out int y)
         {
-#if REVIT2017
+
+#if REVIT2016 || REVIT2015
             try
             {
                 x = uiApp.DrawingAreaExtents.Left;
@@ -194,9 +195,9 @@ namespace Metamorphosis.Utilities
             {
                 x = 10;
                 y = 10;
-            } 
-#endif
-#if REVIT2016
+            }
+#else
+            //2017+
             try
             {
                 x = uiApp.DrawingAreaExtents.Left;

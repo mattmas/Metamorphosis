@@ -18,6 +18,9 @@ using System.Runtime.InteropServices;
 #if REVIT2017
 [assembly: AssemblyConfiguration("Revit 2017")]
 #endif 
+#if REVIT2018
+[assembly: AssemblyConfiguration("Revit 2018")]
+#endif 
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("Metamorphosis")]
 [assembly: AssemblyCopyright("MNM, KM, CP, TH Copyright ©  2016-2017")]
@@ -44,5 +47,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.9.0")]
-[assembly: AssemblyFileVersion("1.0.9.0")]
+[assembly: AssemblyVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.1.0.0")]
