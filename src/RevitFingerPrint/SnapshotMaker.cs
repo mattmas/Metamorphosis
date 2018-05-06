@@ -57,6 +57,10 @@ namespace Metamorphosis
         {
             if (File.Exists(_filename)) File.Delete(_filename); // we have to replace the contents anyway
 
+            // ran into a case where the path didn't exist. make it happen.
+            string folder = Path.GetDirectoryName(_filename);
+            if (Directory.Exists(folder) == false) Directory.CreateDirectory(folder);
+
             //create the SQLite database file.
             SQLiteConnection.CreateFile(_filename);
 
@@ -342,23 +346,32 @@ namespace Metamorphosis
                             LocationPoint pt = loc as LocationPoint;
                             if (pt != null)
                             {
-                                XYZ pt1 = pt.Point;
-                                // special cases.
-                                if ((e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Columns)||
-                                    (e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_StructuralColumns))
+                                try
                                 {
-                                    // in this case, get the Z value from the 
-                                    var offset = e.get_Parameter(BuiltInParameter.FAMILY_BASE_LEVEL_OFFSET_PARAM);
+                                    // noted a time where with a group it didn't work.
 
-                                    if ((e.LevelId != ElementId.InvalidElementId) && (offset != null))
+                                    XYZ pt1 = pt.Point;
+                                    // special cases.
+                                    if ((e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Columns) ||
+                                        (e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_StructuralColumns))
                                     {
-                                        Level levPt1 = lookupLevel(e, pt1);
-                                        double newZ = levPt1.Elevation + offset.AsDouble();
-                                        pt1 = new XYZ(pt1.X, pt1.Y, newZ);
-                                    }
-                                }
+                                        // in this case, get the Z value from the 
+                                        var offset = e.get_Parameter(BuiltInParameter.FAMILY_BASE_LEVEL_OFFSET_PARAM);
 
-                                lp = Utilities.RevitUtils.SerializePoint(pt1);
+                                        if ((e.LevelId != ElementId.InvalidElementId) && (offset != null))
+                                        {
+                                            Level levPt1 = lookupLevel(e, pt1);
+                                            double newZ = levPt1.Elevation + offset.AsDouble();
+                                            pt1 = new XYZ(pt1.X, pt1.Y, newZ);
+                                        }
+                                    }
+
+                                    lp = Utilities.RevitUtils.SerializePoint(pt1);
+                                }
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine("Error: " + e.Name + ": " + e.GetType().Name + ": " + ex.Message);
+                                }
                                 try
                                 {
                                     if (e is FamilyInstance)

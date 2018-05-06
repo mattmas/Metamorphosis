@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-	<Product Id="*" Name="Metamorphosis for Revit" Language="1033" Version="1.1.0.0" Manufacturer="NYC Hackathon Team 14" UpgradeCode="cbce84ae-9576-496e-9cbc-363956edbf13">
+	<Product Id="*" Name="Metamorphosis for Revit" Language="1033" Version="1.2.0.0" Manufacturer="NYC Hackathon Team 14" UpgradeCode="cbce84ae-9576-496e-9cbc-363956edbf13">
 		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine"  />
 
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
@@ -11,6 +11,15 @@
 			<ComponentGroupRef Id="ProductComponents" />
 		</Feature>
     -->
+    <Feature Id="Revit2019Install" Title="Revit 2019" Level="1">
+      <ComponentRef Id="Addin2019" />
+      <ComponentRef Id="MetamorphosisDLL2019" />
+      <ComponentRef Id="NewtonSoft2019" />
+      <ComponentRef Id="SQLite2019" />      
+      <ComponentRef Id="SqliteInterop2019x86.dll"/>
+      <ComponentRef Id="SqliteInterop2019x64.dll"/>
+      <ComponentRef Id="Settings2019.xml"/>
+    </Feature>
       <Feature Id="Revit2018Install" Title="Revit 2018" Level="1">
       <ComponentRef Id="Addin2018" />
       <ComponentRef Id="MetamorphosisDLL2018" />
@@ -58,6 +67,13 @@
           <Directory Id="REVITFOLDER" Name="Revit" >
             <Directory Id="ADDINSFOLDER" Name="Addins">
 
+               <Directory Id="ADDINS2019" Name="2019">
+                <Directory Id="BUNDLEFOLDER2019" Name="Metamorphosis" >
+                  <Directory Id="SQLiteInterop2019x86" Name="x86"/>
+                  <Directory Id="SQLiteInterop2019x64" Name="x64"/>
+                </Directory>
+              </Directory>
+              
               <Directory Id="ADDINS2018" Name="2018">
                 <Directory Id="BUNDLEFOLDER2018" Name="Metamorphosis" >
                   <Directory Id="SQLiteInterop2018x86" Name="x86"/>
@@ -95,6 +111,46 @@
 
 	<Fragment>
 		
+    <!-- 2019 -->
+    <DirectoryRef Id="ADDINS2019">
+        <Component Id="Addin2019" Guid="{D1A462A7-8D76-4E32-9D6C-54A658D1BCE6}" DiskId="1">
+          <CreateFolder/>
+          <File Id="Metamorphosis.addin2019" Name="Metamorphosis.addin" Source="$(var.ProjectDir)Metamorphosis.addin" Checksum="no"/>
+        </Component>
+      </DirectoryRef>
+
+    <DirectoryRef Id="BUNDLEFOLDER2019">
+      <Component Id="MetamorphosisDLL2019" Guid="{C2DB3027-CF3C-4E04-894E-23184D48BA3F}" DiskId="1">
+        <CreateFolder/>
+        <RemoveFolder Id="RemoveBundle2019" On="uninstall"/>
+        <File Id="Metamorphosis.dll2019" Name="Metamorphosis.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release\Metamorphosis.dll" Checksum="no"/>
+      </Component>
+      <Component Id="NewtonSoft2019" Guid="{2EF0A618-C43A-4EFF-87F3-8C79D1F00087}" DiskId="1">
+        <File Id="NewtonSoft2019" Name="Newtonsoft.Json.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release\Newtonsoft.Json.dll" Checksum="no"/>        
+      </Component>
+      <Component Id="SQLite2019" Guid="{9C1B7E0F-79C1-4313-81FB-C6FE5FCE4AA0}" DiskId="1">
+        <File Id="SQLite2019" Name="System.Data.SQLite.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release\System.Data.SQLite.dll" Checksum="no"/>
+      </Component>
+      <Component Id="Settings2019.xml" Guid="{723C9F2E-204B-438E-B9F7-0E9E3DF7B469}" DiskId="1">
+        <File Id="Settings2019" Name="Settings.xml" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release\Settings.xml" Checksum="no"/>
+      </Component>
+    </DirectoryRef>
+    <DirectoryRef Id="SQLiteInterop2019x86">
+      <Component Id="SqliteInterop2019x86.dll" Guid="{E7F277E2-73F1-4E0C-ACF5-266644CE0CBB}" DiskId="1">
+        <CreateFolder/>
+        <RemoveFolder Id="RemoveSqliteInterop2019x86" On="uninstall"/>
+        <File Id="SQLite.Interop.dll2019x86" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release\x86\SQLite.Interop.dll" Checksum="no"/>
+      </Component>
+    </DirectoryRef>
+     <DirectoryRef Id="SQLiteInterop2019x64">
+      <Component Id="SqliteInterop2019x64.dll" Guid="{D16D46AB-4401-473C-987A-399DDEF7CD89}" DiskId="1">
+        <CreateFolder/>
+        <RemoveFolder Id="RemoveSqliteInterop2019x64" On="uninstall"/>
+        <File Id="SQLite.Interop.dll2019x64" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release\x64\SQLite.Interop.dll" Checksum="no"/>
+      </Component>
+    </DirectoryRef>
+    
+    <!-- 2018 -->
        <DirectoryRef Id="ADDINS2018">
         <Component Id="Addin2018" Guid="{A7925784-7166-4E18-9247-3ECC01084B70}" DiskId="1">
           <CreateFolder/>
@@ -106,30 +162,30 @@
       <Component Id="MetamorphosisDLL2018" Guid="{1654C19B-85C7-4E24-883A-07DD6864F712}" DiskId="1">
         <CreateFolder/>
         <RemoveFolder Id="RemoveBundle2018" On="uninstall"/>
-        <File Id="Metamorphosis.dll2018" Name="Metamorphosis.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release\Metamorphosis.dll" Checksum="no"/>
+        <File Id="Metamorphosis.dll2018" Name="Metamorphosis.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release2018\Metamorphosis.dll" Checksum="no"/>
       </Component>
       <Component Id="NewtonSoft2018" Guid="{AD058D16-87C4-4F32-B6D8-943D8B6BFA75}" DiskId="1">
-        <File Id="NewtonSoft2018" Name="Newtonsoft.Json.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release\Newtonsoft.Json.dll" Checksum="no"/>        
+        <File Id="NewtonSoft2018" Name="Newtonsoft.Json.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release2018\Newtonsoft.Json.dll" Checksum="no"/>        
       </Component>
       <Component Id="SQLite2018" Guid="{F83F7B0A-F127-4815-B102-25A87D834594}" DiskId="1">
-        <File Id="SQLite2018" Name="System.Data.SQLite.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release\System.Data.SQLite.dll" Checksum="no"/>
+        <File Id="SQLite2018" Name="System.Data.SQLite.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release2018\System.Data.SQLite.dll" Checksum="no"/>
       </Component>
       <Component Id="Settings2018.xml" Guid="{5A686361-F7F8-4CC0-937D-1F30941FCADD}" DiskId="1">
-        <File Id="Settings2018" Name="Settings.xml" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release\Settings.xml" Checksum="no"/>
+        <File Id="Settings2018" Name="Settings.xml" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release2018\Settings.xml" Checksum="no"/>
       </Component>
     </DirectoryRef>
     <DirectoryRef Id="SQLiteInterop2018x86">
       <Component Id="SqliteInterop2018x86.dll" Guid="{A3CE5FC3-7402-4C2F-A6CC-C72D089A7C11}" DiskId="1">
         <CreateFolder/>
         <RemoveFolder Id="RemoveSqliteInterop2018x86" On="uninstall"/>
-        <File Id="SQLite.Interop.dll2018x86" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release\x86\SQLite.Interop.dll" Checksum="no"/>
+        <File Id="SQLite.Interop.dll2018x86" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release2018\x86\SQLite.Interop.dll" Checksum="no"/>
       </Component>
     </DirectoryRef>
      <DirectoryRef Id="SQLiteInterop2018x64">
       <Component Id="SqliteInterop2018x64.dll" Guid="{227AAA07-6255-4213-8994-C7DE5E0B36F6}" DiskId="1">
         <CreateFolder/>
         <RemoveFolder Id="RemoveSqliteInterop2018x64" On="uninstall"/>
-        <File Id="SQLite.Interop.dll2018x64" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release\x64\SQLite.Interop.dll" Checksum="no"/>
+        <File Id="SQLite.Interop.dll2018x64" Name="SQLite.Interop.dll" Source="$(var.ProjectDir)\..\RevitFingerPrint\bin\Release2018\x64\SQLite.Interop.dll" Checksum="no"/>
       </Component>
     </DirectoryRef>
       

@@ -296,14 +296,22 @@ namespace Metamorphosis.UI
 
                 overrideColor = Utilities.Settings.GetColor(group.Key);
 
-                
+
+#if REVIT2019
+                ogs.SetSurfaceForegroundPatternColor(overrideColor);
+                ogs.SetSurfaceForegroundPatternId(solidFill.Id);
+                ogs.SetProjectionLineColor(overrideColor);
+                ogs.SetCutForegroundPatternColor(overrideColor);
+                ogs.SetCutForegroundPatternId(solidFill.Id);
+                ogs.SetCutLineColor(overrideColor);
+#else
                 ogs.SetProjectionFillColor(overrideColor);
                 ogs.SetProjectionFillPatternId(solidFill.Id);
                 ogs.SetProjectionLineColor(overrideColor);
                 ogs.SetCutFillColor(overrideColor);
                 ogs.SetCutFillPatternId(solidFill.Id);
                 ogs.SetCutLineColor(overrideColor);
-                
+#endif                
                 foreach (ElementId id in ids)
                 {
                     _uiDoc.ActiveGraphicalView.SetElementOverrides(id, ogs);
