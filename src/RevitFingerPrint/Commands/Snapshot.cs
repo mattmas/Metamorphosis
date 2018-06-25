@@ -43,7 +43,10 @@ namespace Metamorphosis
                 td.ExpandedContent = "File: " + filename + Environment.NewLine + "Duration: " + maker.Duration.TotalMinutes.ToString("F2") + " minutes.";
                 td.Show();
 
-                
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+
+
 
                 return Result.Succeeded;
             }            
@@ -73,6 +76,10 @@ namespace Metamorphosis
             maker.Export();
 
             doc.Application.WriteJournalComment("Snapshot completed. Duration:  " + maker.Duration, false);
+            doc.Application.WriteJournalComment("Garbage Collection to release db...", false);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            doc.Application.WriteJournalComment("Garbage is collected.", false);
 
         }
     }

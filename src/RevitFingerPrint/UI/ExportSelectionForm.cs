@@ -66,7 +66,16 @@ namespace Metamorphosis.UI
                 }
                 else
                 {
-                    filename = Path.Combine(Path.GetDirectoryName(doc.PathName), filename + "_" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".sdb");
+                    if (String.IsNullOrEmpty(doc.PathName)) return String.Empty;
+
+                    try
+                    {
+                        filename = Path.Combine(Path.GetDirectoryName(doc.PathName), filename + "_" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".sdb");
+                    }
+                    catch (Exception ex)
+                    {
+                        doc.Application.WriteJournalComment("Note: struggling to get suggested filename: " + ex.GetType().Name + ": " + ex.Message, false);
+                    }
                 }
                 
 

@@ -49,12 +49,19 @@ namespace Metamorphosis
             createDatabase();
             // populate
             exportParameterData();
+
+            _doc.Application.WriteJournalComment("Export Completed. Releasing hold on database file.", false);
+            // release the hold on the database 
+            //https://stackoverflow.com/questions/8511901/system-data-sqlite-close-not-releasing-database-file
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
         #endregion
 
         #region PrivateMethods
         private void createDatabase()
         {
+            _doc.Application.WriteJournalComment("Creating database: " + _filename, false);
             if (File.Exists(_filename)) File.Delete(_filename); // we have to replace the contents anyway
 
             // ran into a case where the path didn't exist. make it happen.
@@ -84,6 +91,7 @@ namespace Metamorphosis
         
         private void exportParameterData()
         {
+            _doc.Application.WriteJournalComment("Retrieving Data...", false);
             DateTime start = DateTime.Now;
             
             // retrieve all of the instance elements, and process them.
@@ -111,7 +119,9 @@ namespace Metamorphosis
                 }
             }
 
-            System.Diagnostics.Debug.WriteLine((DateTime.Now - start) + ": " + instances.Count + " instances and " + typeElementsUsed.Count + " types.");
+            string msg = (DateTime.Now - start) + ": " + instances.Count + " instances and " + typeElementsUsed.Count + " types.";
+            _doc.Application.WriteJournalComment(msg, false);
+            System.Diagnostics.Debug.WriteLine(msg);
 
             // go through all of the type elements and instances and capture the parameter ids
             _headerDict["SchemaVersion"] = "1.0";
@@ -125,30 +135,36 @@ namespace Metamorphosis
             updateHeaderTable();
 
             updateParameterDictionary(typeElementsUsed.Values.ToList());
-            System.Diagnostics.Debug.WriteLine((DateTime.Now - start) + ": Parameter Dictionary Updated for Types");
+            log((DateTime.Now - start) + ": Parameter Dictionary Updated for Types");
             updateParameterDictionary(instances);
-            System.Diagnostics.Debug.WriteLine((DateTime.Now - start) + ": Parameter Dictionary Updated for Instances");
+            log((DateTime.Now - start) + ": Parameter Dictionary Updated for Instances");
 
             updateIdTable(typeElementsUsed.Values.ToList(), true);
-            System.Diagnostics.Debug.WriteLine((DateTime.Now - start) + ": Id Table Updated for Types");
+            log((DateTime.Now - start) + ": Id Table Updated for Types");
             updateIdTable(instances, false);
-            System.Diagnostics.Debug.WriteLine((DateTime.Now - start) + ": Id Table Updated for Instances");
+            log((DateTime.Now - start) + ": Id Table Updated for Instances");
             updateAttributeTable();
-            System.Diagnostics.Debug.WriteLine((DateTime.Now - start) + ": Attribute Table Updated for All");
+            log((DateTime.Now - start) + ": Attribute Table Updated for All");
 
 
             updateEntityAttributeValues(typeElementsUsed.Values.ToList());
-            System.Diagnostics.Debug.WriteLine((DateTime.Now - start) + ": Att/Values Table Updated for Types");
+            log((DateTime.Now - start) + ": Att/Values Table Updated for Types");
 
             updateEntityAttributeValues(instances);
-            System.Diagnostics.Debug.WriteLine((DateTime.Now - start) + ": Att/Values Table Updated for Instances");
+            log((DateTime.Now - start) + ": Att/Values Table Updated for Instances");
             updateValueTable();
-            System.Diagnostics.Debug.WriteLine((DateTime.Now - start) + ": Value Table Updated for All");
+            log((DateTime.Now - start) + ": Value Table Updated for All");
 
             updateGeometryTable(instances);
-            System.Diagnostics.Debug.WriteLine((DateTime.Now - start) + ": Geometry Table Updated for Types");
+            log((DateTime.Now - start) + ": Geometry Table Updated for Types");
             Duration = DateTime.Now - start;
-            System.Diagnostics.Debug.WriteLine("Total Time: " + Duration.TotalMinutes + " minutes");
+            log("Total Time: " + Duration.TotalMinutes + " minutes");
+        }
+
+        private void log(string msg)
+        {
+            _doc.Application.WriteJournalComment(msg, false);
+            System.Diagnostics.Debug.WriteLine(msg);
         }
 
         private void updateIdTable(IList<Element> elements, bool isTypes)

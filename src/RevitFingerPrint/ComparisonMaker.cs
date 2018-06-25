@@ -22,7 +22,7 @@ namespace Metamorphosis
         private Dictionary<string, int> _categoryCount = new Dictionary<string, int>();
         private HashSet<string> _requestedCategoryNames = new HashSet<string>();
         private IList<Level> _allLevels;
-
+        private bool _isMetric = false;
 
 
 
@@ -36,12 +36,19 @@ namespace Metamorphosis
         #region Accessors
         public Boolean AllCategories { get; set; } = true;
         public IList<Category> RequestedCategories { get; set; }
+        public double MoveTolerance { get; set; }
+        public float RotateTolerance { get; set; }
         #endregion
 
         #region Constructor
         public ComparisonMaker(Document doc, string previousFile)
         {
+            MoveTolerance = 0.0006;  // default;
+            RotateTolerance = 0.0349f; // default
+
             _doc = doc;
+            if (doc.DisplayUnitSystem == DisplayUnit.METRIC) _isMetric = true;
+
             _filename = previousFile;
 
             _dbFilename = _filename;
@@ -213,16 +220,44 @@ namespace Metamorphosis
             return null;
         }
 
+        private string getHumanComparison(double distInFeet)
+        {
+            if (_isMetric)
+            {
+                // less than 1 foot
+                if (distInFeet < 1.0)
+                {
+                    return (distInFeet * 304.8).ToString("F1") + "mm";
+                }
+                if (distInFeet < 3.28)  // less than a m, do cm...
+                {
+                    return (distInFeet * 30.48).ToString("F2") + "cm";
+                }
+                return (distInFeet * 0.3048) + "m";
+            }
+            else
+            {
+                if (distInFeet < 3.0)
+                {
+                    return (distInFeet * 12.0).ToString("F3") + "in.";
+                }
+                else
+                {
+                    return distInFeet + "ft.";
+                }
+            }
+        }
+
         private Change compareGeometry(RevitElement current, RevitElement previous)
         {
             // try to do a comparison based on bounding boxes and locations...
             // this is CERTAINLY imperfect
 
-            double tolerance = 0.0006;  // decimal feet - 1/128"?
+           //old, fixed: double tolerance = 0.0006;  // decimal feet - 1/128"?
 
             double dist = -1;
 
-            if (didMove(current.LocationPoint, previous.LocationPoint, tolerance, out dist))
+            if (didMove(current.LocationPoint, previous.LocationPoint, MoveTolerance, out dist))
             {
 
                 Change c = new Change()
@@ -231,13 +266,13 @@ namespace Metamorphosis
                     Category = current.Category,
                     ElementId = current.ElementId,
                     UniqueId = current.UniqueId,
-                    ChangeDescription = "Location Offset " + dist + " ft."
+                    ChangeDescription = "Location Offset " + getHumanComparison(dist)
                 };
                 if (current.BoundingBox != null) c.BoundingBoxDescription = Utilities.RevitUtils.SerializeBoundingBox(current.BoundingBox);
 
                 // we want to check if the LocationPoint2 also moved?
                 if ((current.LocationPoint2 != null) && (previous.LocationPoint2 != null) &&
-                    (didMove(current.LocationPoint2, previous.LocationPoint2, tolerance, out dist)))
+                    (didMove(current.LocationPoint2, previous.LocationPoint2, MoveTolerance, out dist)))
                 {
 
                     // both moved. record both.
@@ -257,7 +292,7 @@ namespace Metamorphosis
 
             // only a move of the second one...
             if ((current.LocationPoint2 != null) && (previous.LocationPoint2 != null) && 
-                    didMove(previous.LocationPoint2, current.LocationPoint2, tolerance, out dist))
+                    didMove(previous.LocationPoint2, current.LocationPoint2, MoveTolerance, out dist))
             {
                 
                     Change c = new Change()
@@ -266,7 +301,7 @@ namespace Metamorphosis
                         Category = current.Category,
                         ElementId = current.ElementId,
                         UniqueId = current.UniqueId,
-                        ChangeDescription = "Location Offset " + dist + " ft.",
+                        ChangeDescription = "Location Offset " + getHumanComparison(dist),
                         Level = current.Level
                     };
                     if (current.BoundingBox != null) c.BoundingBoxDescription = Utilities.RevitUtils.SerializeBoundingBox(current.BoundingBox);
@@ -278,10 +313,10 @@ namespace Metamorphosis
             }
 
             // check rotation
-            float rotationTolerance = 0.0349f; // two degrees?
+            // old, fixed: float rotationTolerance = 0.0349f; // two degrees?
             float rotationDiff = current.Rotation - previous.Rotation;
             
-            if (Math.Abs(rotationDiff) > rotationTolerance)
+            if (Math.Abs(rotationDiff) > RotateTolerance)
             {
                 Change c = new Change()
                 {
@@ -304,7 +339,7 @@ namespace Metamorphosis
                 double maxDist = Math.Max(current.BoundingBox.Min.DistanceTo(previous.BoundingBox.Min),
                                            current.BoundingBox.Max.DistanceTo(previous.BoundingBox.Max));
 
-                if (maxDist > tolerance)
+                if (maxDist > MoveTolerance)
                 {
                     Change c = new Change()
                     {
@@ -312,7 +347,7 @@ namespace Metamorphosis
                         Category = current.Category,
                         ElementId = current.ElementId,
                         UniqueId = current.UniqueId,
-                        ChangeDescription = "BoundingBox Offset " + maxDist + " ft.",
+                        ChangeDescription = "BoundingBox Offset " + getHumanComparison(maxDist),
                     };
                     c.BoundingBoxDescription = Utilities.RevitUtils.SerializeBoundingBox(current.BoundingBox);
                     return c;

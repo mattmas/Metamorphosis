@@ -43,6 +43,20 @@ namespace Metamorphosis
                 comparison.AllCategories = form.AllCategories;
                 comparison.RequestedCategories = form.SelectedCategories;
 
+                try
+                {
+                    double moveTol;
+                    float angTol;
+                    Utilities.Settings.ReadTolerance(out moveTol, out angTol);
+                    comparison.MoveTolerance = moveTol;
+                    comparison.RotateTolerance = angTol;
+                }
+                catch (Exception ex)
+                {
+                    doc.Application.WriteJournalComment("Exception reading tolerances from settings file: " + ex.GetType().Name + ": " + ex.Message,false);
+                }
+                doc.Application.WriteJournalComment("Tolerances: Distance: " + comparison.MoveTolerance + " Angle: " + comparison.RotateTolerance, false);
+
                 IList<Objects.Change> changes = comparison.Compare();
 
                 if (changes.Count > 0)

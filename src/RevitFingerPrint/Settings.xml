@@ -1,5 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Settings>
+  <!-- Control what amount of change in position or angle represents a 'real' change.
+       Length units specified in DECIMAL FEET, Angles in RADIANS -->
+  <Tolerance length="0.0006" angle="0.0349"/>
 <ColorChoices>
   <!-- Specify the ChangeType, and then the color. The color is in the format of either:
     - the .NET Color name (https://msdn.microsoft.com/en-us/library/system.drawing.color(v=vs.110).aspx) 

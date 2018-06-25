@@ -109,6 +109,36 @@ namespace Metamorphosis.Utilities
             return LogLevel.Basic;
         }
 
+        public static void ReadTolerance(out double moveTol, out float angleTol)
+        {
+            readData();
+
+            //defaults...
+            moveTol = 0.0006;
+            angleTol = 0.0349f;
+
+            if (_doc == null)
+            {
+                System.Diagnostics.Debug.WriteLine("Did not find settings document!");
+                
+                return;
+            }
+
+            XmlElement elem = _doc.SelectSingleNode("/Settings/Tolerance") as XmlElement;
+            if (elem != null)
+            {
+                
+                if (Double.TryParse(elem.Attributes["length"].Value, out moveTol) == false)
+                {
+                    System.Diagnostics.Debug.WriteLine("Invalid Length Tolerance Setting!" + elem.Attributes["length"].Value);
+                }
+                if (float.TryParse(elem.Attributes["angle"].Value, out angleTol) == false)
+                {
+                    System.Diagnostics.Debug.WriteLine("Invalid Angle Tolerance Setting!" + elem.Attributes["angle"].Value);
+                }
+            }
+        }
+
         private static void readData()
         {
             if (_doc != null) return;
