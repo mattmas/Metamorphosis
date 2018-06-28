@@ -468,7 +468,21 @@ namespace Metamorphosis
 
                 if (!isTypes)
                 {
-                    var box = e.get_BoundingBox(null);
+                    // seen at least one case where retrieving bounding box threw an internal error
+                    BoundingBoxXYZ box = null;
+                    try
+                    {
+                        box = e.get_BoundingBox(null);
+                    }
+                    catch (Exception ex)
+                    {
+                        _doc.Application.WriteJournalComment("Encountered error trying to get BoundingBox of Element Id: " + e.Id + " Exception: " + ex.GetType().Name + ": " + ex.Message, false);
+                        if (ex is Autodesk.Revit.Exceptions.ApplicationException)
+                        {
+                            var aex = ex as Autodesk.Revit.Exceptions.ApplicationException;
+                            _doc.Application.WriteJournalComment("  => " + aex.FunctionId + " " + aex.HResult + " " + aex.Source, false);
+                        }
+                    }
                     if (box != null) revitElem.BoundingBox = box;
 
                     LocationPoint lp = e.Location as LocationPoint;

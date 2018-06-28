@@ -162,6 +162,8 @@ namespace Metamorphosis
                 doc.Application.WriteJournalComment("  Date Stamp Results: " + dateStampResults, false);
                 doc.Application.WriteJournalComment("  Category Config: " + categoryConfig, false);
                 ExternalApp.FirstTimeRun(); // analytics
+               
+
 
                 numChanges = -1;
                 if (previousFile == null)
@@ -221,6 +223,22 @@ namespace Metamorphosis
                     doc.Application.WriteJournalComment("Have " + comparison.RequestedCategories.Count + " categories requested for comparison.", false);
 
                 }
+                //comparison tolerances:
+                try
+                {
+                    double moveTol;
+                    float angTol;
+                    Utilities.Settings.ReadTolerance(out moveTol, out angTol);
+                    comparison.MoveTolerance = moveTol;
+                    comparison.RotateTolerance = angTol;
+                }
+                catch (Exception ex)
+                {
+                    doc.Application.WriteJournalComment("Exception reading tolerances from settings file: " + ex.GetType().Name + ": " + ex.Message, false);
+                }
+                doc.Application.WriteJournalComment("Tolerances: Distance: " + comparison.MoveTolerance + " Angle: " + comparison.RotateTolerance, false);
+
+
 
                 string tmpFile = doc.Title;
                 if (tmpFile.ToUpper().Contains("_DETACHED")) tmpFile = tmpFile.ToLower().Replace("_detached", "");
