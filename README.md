@@ -21,7 +21,7 @@ This tool was developed at the CORE Studio AEC Symposium and Hackathon, December
 ## Further Development
 Since the original hackathon, we've added a number of newer features, including:
 1. A Windows Installer
-2. Support for Revit 2019, 2018, 2017, 2016 and 2015  (all signed DLLs in the provided MSI)
+2. Support for Revit 2020, 2019, 2018, 2017, 2016 and 2015  (all signed DLLs in the provided MSI)
 3. Enhanced Coloring/identifying of elements that changed.
 4. Configuration of colors
 5. Beginnings of API hooks for batch operation.
