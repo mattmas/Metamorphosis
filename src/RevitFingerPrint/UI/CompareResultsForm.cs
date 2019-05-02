@@ -297,7 +297,7 @@ namespace Metamorphosis.UI
                 overrideColor = Utilities.Settings.GetColor(group.Key);
 
 
-#if REVIT2019
+#if REVIT2019 || REVIT2020
                 ogs.SetSurfaceForegroundPatternColor(overrideColor);
                 ogs.SetSurfaceForegroundPatternId(solidFill.Id);
                 ogs.SetProjectionLineColor(overrideColor);
