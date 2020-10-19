@@ -13,10 +13,11 @@ namespace Metamorphosis.Utilities
     /// </summary>
     internal static class DataUtility
     {
-        internal static Version CurrentVersion = new Version(1, 0);
+        internal static Version CurrentVersion = new Version(1, 1);
 
         private static Assembly _CurrentAsm = System.Reflection.Assembly.GetExecutingAssembly();
-        private static Dictionary<Version, string> _UpgradeScripts = new Dictionary<Version, string>() { { new Version(1, 0), "Metamorphosis.DBScript.UpgradeToV1.txt" } };
+        private static Dictionary<Version, string> _UpgradeScripts = new Dictionary<Version, string>() { { new Version(1, 0), "Metamorphosis.DBScript.UpgradeToV1.txt" },
+            { new Version(1,1), "Metamorphosis.DBScript.UpgradeToV1.1.txt" } };
         
         internal static void UpgradeFrom(SQLiteConnection conn, Version v, Action<string> log)
         {

@@ -18,6 +18,8 @@ namespace Metamorphosis.Objects
 
         public string Level { get; set; }
 
+        public string VersionGuid { get; set; }
+
         public Dictionary<string, string> Parameters { get; set; } = new Dictionary<string, string>();
 
         public Dictionary<int, int> ParameterValueIds { get; set; } = new Dictionary<int, int>();

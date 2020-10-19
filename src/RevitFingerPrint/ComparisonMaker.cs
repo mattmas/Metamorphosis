@@ -13,6 +13,7 @@ namespace Metamorphosis
     public class ComparisonMaker
     {
         #region Declarations
+        private enum VersionGuidCompareEnum { Unknown, Matching, NotMatching};
         private Document _doc;
         private string _filename;
         private string _dbFilename;
@@ -23,6 +24,7 @@ namespace Metamorphosis
         private HashSet<string> _requestedCategoryNames = new HashSet<string>();
         private IList<Level> _allLevels;
         private bool _isMetric = false;
+        private bool _useGuidCompare = false;
 
 
 
@@ -51,10 +53,15 @@ namespace Metamorphosis
 
             _filename = previousFile;
 
+            RequestedCategories = new List<Category>();
+
             _dbFilename = _filename;
             // see: http://system.data.sqlite.org/index.html/info/bbdda6eae2
             if (_filename.StartsWith(@"\\")) _dbFilename = @"\\" + _dbFilename;
             doc.Application.WriteJournalComment("Previous File DB: " + _dbFilename, false);
+
+            _useGuidCompare = Metamorphosis.Utilities.Settings.GetVersionGuidOption();
+            doc.Application.WriteJournalComment("GuidCompare Option: " + _useGuidCompare, false);
         }
         #endregion
 
@@ -124,8 +131,37 @@ namespace Metamorphosis
                     // it exists, so let's compare
                     var previous = _idValues[currentPair.Key];
 
+                    VersionGuidCompareEnum compare = VersionGuidCompareEnum.Unknown;
+#if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020
+                    // can't do anything with VersionGUID
+#else
+                    if ((current != null) && (previous != null) && (current.VersionGuid != null) && (previous.VersionGuid != null))
+                    {
+                        if (current.VersionGuid != previous.VersionGuid)
+                        {
+                            compare = VersionGuidCompareEnum.NotMatching;
+                        }
+                        else
+                        {
+                            compare = VersionGuidCompareEnum.Matching;
+                        }
+                    }
+#endif
+                    if (_useGuidCompare && (compare == VersionGuidCompareEnum.Matching)) continue; // skip stuff where it is matching!
+
                     var change = compareElements(current, previous);
-                    if (change != null) changes.Add(change);
+                    if (change != null)
+                    {
+                        //temporary: does this agree with the compare?
+                        if (compare == VersionGuidCompareEnum.Matching)
+                        {
+#if DEBUG
+                            System.Diagnostics.Debug.Assert(false, "This should have been matching. why is there a change?");
+#endif
+                            _doc.Application.WriteJournalComment("Note: Odd element that should match but doesn't: " + current.Category + ": " + change.ChangeDescription, false);
+                        }
+                        changes.Add(change);
+                    }
                 }
                 else
                 {
@@ -158,10 +194,15 @@ namespace Metamorphosis
         {
             // compare the parameter values
 
+            
+
             // at present, we can only compare string values
             Change c = compareParameters(current, previous);
 
-            if (c != null) return c;
+            if (c != null)
+            {              
+                return c;
+            }
 
             c = compareGeometry(current, previous);
 
@@ -433,6 +474,11 @@ namespace Metamorphosis
                 _categoryCount[c.Name]++;
 
                 var revitElem = new RevitElement() { ElementId = e.Id.IntegerValue, Category = (c != null) ? c.Name : "(none)" };
+#if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020
+                // do nothing here
+#else
+                if (e.VersionGuid != null) revitElem.VersionGuid = e.VersionGuid.ToString();
+#endif
                 _currentElems.Add(e.Id.IntegerValue, revitElem);
 
                 IList<Autodesk.Revit.DB.Parameter> parms = Utilities.RevitUtils.GetParameters(e);
@@ -696,7 +742,7 @@ namespace Metamorphosis
 
                 /// read the ID information for each element.
                 cmd = conn.CreateCommand();
-                cmd.CommandText = "select id,external_id,category,isType FROM _objects_id";
+                cmd.CommandText = "select id,external_id,category,isType,versionGuid FROM _objects_id";
                 using (SQLiteDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
@@ -706,11 +752,16 @@ namespace Metamorphosis
                         string guid = reader.GetString(1);
                         string cat = reader.GetString(2);
                         int isType = reader.GetInt32(3);
+                        string verguid = null;
+                        if (reader.IsDBNull(4) == false) verguid = reader.GetString(4);
+                      
+                        
 
                         var elem = _idValues[id];
                         elem.Category = cat;
                         elem.UniqueId = guid;
                         elem.IsType = (isType == 1);
+                        elem.VersionGuid = verguid;
                     }
                 }
             }
@@ -770,6 +821,6 @@ namespace Metamorphosis
 
             return new XYZ(Double.Parse(pieces[0], CultureInfo.InvariantCulture), Double.Parse(pieces[1], CultureInfo.InvariantCulture), Double.Parse(pieces[2], CultureInfo.InvariantCulture));
         }
-        #endregion
+#endregion
     }
 }

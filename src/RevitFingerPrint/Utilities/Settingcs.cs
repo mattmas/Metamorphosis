@@ -13,7 +13,9 @@ namespace Metamorphosis.Utilities
     {
         internal enum LogLevel { Basic, Verbose};
         private static XmlDocument _doc;
+        
 
+      
 
         internal static Autodesk.Revit.DB.Color GetColor( object typeName)
         {
@@ -83,6 +85,27 @@ namespace Metamorphosis.Utilities
 
         }
 
+        public static bool GetVersionGuidOption()
+        {
+            readData();
+
+
+            if (_doc == null)
+            {
+                System.Diagnostics.Debug.WriteLine("Did not find settings document!");
+                return false;
+            }
+
+            XmlElement elem = _doc.SelectSingleNode("/Settings/UseVersionGuid") as XmlElement;
+
+            if (elem == null) return false;
+
+            if (String.IsNullOrEmpty(elem.InnerText)) return false;
+
+            if (elem.InnerText.ToUpper() == "YES" || elem.InnerText.ToUpper() == "TRUE" || elem.InnerText.ToUpper() == true.ToString().ToUpper()) return true;
+
+            return false;
+        }
         public static LogLevel GetLogLevel()
         {
             readData();

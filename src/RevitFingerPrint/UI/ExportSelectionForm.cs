@@ -60,6 +60,10 @@ namespace Metamorphosis.UI
                                 string baseName = Path.GetFileNameWithoutExtension(centralPath);
                                 filename = Path.Combine(folder, "Snapshots", baseName + "_" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".sdb");
                             }
+                            if (centralPath.ToUpper().StartsWith("BIM360:"))
+                        {
+                            filename = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), filename + ".sdb");
+                        }
                        
                     }
                     catch { }

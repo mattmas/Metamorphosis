@@ -203,19 +203,31 @@ namespace Metamorphosis
                         // we need to go look for the stored settings with this name...
                         var file = CategorySettingsFile.GetFileByName(categoryConfig);
 
-                        doc.Application.WriteJournalComment("Found CategorySettingsFile: " + file.Filename, false);
-                        comparison.RequestedCategories = new List<Category>();
-                        foreach (var setting in file.Settings)
+                        if (file == null)
                         {
-                            if (setting.Enabled)
-                            {
-                                Category c = doc.Settings.Categories.get_Item((BuiltInCategory)setting.CategoryId);
-                                if (c != null)
-                                {
-                                    if (c.CategoryType == CategoryType.Internal) continue;
-                                    if (c.CategoryType == CategoryType.Invalid) continue;
+                            doc.Application.WriteJournalComment("Looked for category settings filename " + categoryConfig + " but did not find.", false);
+                            comparison.AllCategories = true;
+                            comparison.RequestedCategories = new List<Category>();
 
-                                    comparison.RequestedCategories.Add(c);
+                        }
+                        else
+                        {
+
+                            doc.Application.WriteJournalComment("Found CategorySettingsFile: " + file.Filename, false);
+                            comparison.RequestedCategories = new List<Category>();
+                            foreach (var setting in file.Settings)
+                            {
+                                if (setting.Enabled)
+                                {
+                                    Category c = doc.Settings.Categories.get_Item((BuiltInCategory)setting.CategoryId);
+                                    if (c != null)
+                                    {
+                                        if (c.CategoryType == CategoryType.Internal) continue;
+                                        if (c.CategoryType == CategoryType.Invalid) continue;
+
+                                        comparison.RequestedCategories.Add(c);
+
+                                    }
                                 }
                             }
                         }

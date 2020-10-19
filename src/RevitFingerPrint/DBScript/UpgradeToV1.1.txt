@@ -1,0 +1,1 @@
+﻿ALTER TABLE "_objects_id" ADD COLUMN "versionguid" TEXT

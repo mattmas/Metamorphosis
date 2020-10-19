@@ -297,20 +297,22 @@ namespace Metamorphosis.UI
                 overrideColor = Utilities.Settings.GetColor(group.Key);
 
 
-#if REVIT2019 || REVIT2020
-                ogs.SetSurfaceForegroundPatternColor(overrideColor);
-                ogs.SetSurfaceForegroundPatternId(solidFill.Id);
-                ogs.SetProjectionLineColor(overrideColor);
-                ogs.SetCutForegroundPatternColor(overrideColor);
-                ogs.SetCutForegroundPatternId(solidFill.Id);
-                ogs.SetCutLineColor(overrideColor);
-#else
+#if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018
                 ogs.SetProjectionFillColor(overrideColor);
                 ogs.SetProjectionFillPatternId(solidFill.Id);
                 ogs.SetProjectionLineColor(overrideColor);
                 ogs.SetCutFillColor(overrideColor);
                 ogs.SetCutFillPatternId(solidFill.Id);
                 ogs.SetCutLineColor(overrideColor);
+#else
+                ogs.SetSurfaceForegroundPatternColor(overrideColor);
+                ogs.SetSurfaceForegroundPatternId(solidFill.Id);
+                ogs.SetProjectionLineColor(overrideColor);
+                ogs.SetCutForegroundPatternColor(overrideColor);
+                ogs.SetCutForegroundPatternId(solidFill.Id);
+                ogs.SetCutLineColor(overrideColor);
+                
+      
 #endif                
                 foreach (ElementId id in ids)
                 {

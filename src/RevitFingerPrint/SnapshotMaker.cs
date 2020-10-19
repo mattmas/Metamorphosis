@@ -124,7 +124,7 @@ namespace Metamorphosis
             System.Diagnostics.Debug.WriteLine(msg);
 
             // go through all of the type elements and instances and capture the parameter ids
-            _headerDict["SchemaVersion"] = "1.0";
+            _headerDict["SchemaVersion"] = "1.1";
             _headerDict["Model"] = Utilities.RevitUtils.GetModelPath(_doc);
             _headerDict["ExportVersion"] = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
             _headerDict["ExportDate"] = DateTime.Now.ToString();
@@ -171,26 +171,43 @@ namespace Metamorphosis
         {
             using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
-                conn.Open();
-                using (var transaction = conn.BeginTransaction())
+                string currentQuery = "";
+                try
                 {
-                    foreach (Element e in elements)
+                    conn.Open();
+                    using (var transaction = conn.BeginTransaction())
                     {
-                        Category c = e.Category;
-                        if (c == null)
+                        foreach (Element e in elements)
                         {
-                            FamilySymbol fs = e as FamilySymbol;
-                            if (fs != null) c = fs.Family.FamilyCategory;
+                            string versionGuid = "NULL";
+#if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020
+                            // we do nothing
+#else
+                            if (e.VersionGuid != null) versionGuid = String.Format("'{0}'", e.VersionGuid);
+#endif
+                            Category c = e.Category;
+                            if (c == null)
+                            {
+                                FamilySymbol fs = e as FamilySymbol;
+                                if (fs != null) c = fs.Family.FamilyCategory;
+                            }
+                            string catName = (c != null) ? c.Name : "(none)";
+                            if (catName.Contains("'")) catName = catName.Replace("'", "''");
+                            var cmd = conn.CreateCommand();
+                            cmd.CommandText = String.Format("INSERT INTO _objects_id (id,external_id,category,isType,versionguid) VALUES({0},'{1}','{2}',{3},{4})", e.Id.IntegerValue, e.UniqueId, catName, (isTypes) ? 1 : 0, versionGuid);
+                            currentQuery = cmd.CommandText;
+
+                            cmd.ExecuteNonQuery();
                         }
-                        string catName = (c != null) ? c.Name : "(none)";
-                        if (catName.Contains("'")) catName = catName.Replace("'", "''");
-                        var cmd = conn.CreateCommand();
-                        cmd.CommandText = String.Format("INSERT INTO _objects_id (id,external_id,category,isType) VALUES({0},'{1}','{2}',{3})", e.Id.IntegerValue, e.UniqueId,catName, (isTypes) ? 1:0);
 
-                        cmd.ExecuteNonQuery();
+                        transaction.Commit();
                     }
-
-                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    log("Exception updating ID Table: " + ex.GetType().Name + ": " + ex.Message);
+                    log("Current Query: " + currentQuery);
+                    throw; // rethrow;
                 }
             }
         }
@@ -199,19 +216,34 @@ namespace Metamorphosis
         {
             using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
-                conn.Open();
-                using (var transaction = conn.BeginTransaction())
+                string currentQuery = "";
+                try
                 {
-                    foreach (var pair in _headerDict)
+
+
+                    conn.Open();
+                    using (var transaction = conn.BeginTransaction())
                     {
-                       
-                        var cmd = conn.CreateCommand();
-                        cmd.CommandText = String.Format("INSERT INTO _objects_header (keyword,value) VALUES('{0}','{1}')", pair.Key,pair.Value);
+                        foreach (var pair in _headerDict)
+                        {
 
-                        cmd.ExecuteNonQuery();
+                            var cmd = conn.CreateCommand();
+                            string val = pair.Value.Replace("'", "''");
+
+                            cmd.CommandText = String.Format("INSERT INTO _objects_header (keyword,value) VALUES('{0}','{1}')", pair.Key, pair.Value);
+                            currentQuery = cmd.CommandText;
+
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        transaction.Commit();
                     }
-
-                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    log("Exception updating header Table: " + ex.GetType().Name + ": " + ex.Message);
+                    log("Current Query: " + currentQuery);
+                    throw; // rethrow;
                 }
             }
         }
@@ -219,20 +251,31 @@ namespace Metamorphosis
         {
             using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
-                conn.Open();
-                using (var transaction = conn.BeginTransaction())
+                string currentQuery = "";
+                try
                 {
-                    foreach (var pair in _paramDict)
+                    conn.Open();
+                    using (var transaction = conn.BeginTransaction())
                     {
-                        string name = pair.Value.Definition.Name;
-                        if (name.Contains("'")) name = name.Replace("'", "''");
-                        var cmd = conn.CreateCommand();
-                        cmd.CommandText = String.Format("INSERT INTO _objects_attr (id,name,category,data_type) VALUES({0},'{1}','{2}',{3})", pair.Value.Id.IntegerValue, name, LabelUtils.GetLabelFor(pair.Value.Definition.ParameterGroup), (int)pair.Value.Definition.ParameterGroup);
+                        foreach (var pair in _paramDict)
+                        {
+                            string name = pair.Value.Definition.Name;
+                            if (name.Contains("'")) name = name.Replace("'", "''");
+                            var cmd = conn.CreateCommand();
+                            cmd.CommandText = String.Format("INSERT INTO _objects_attr (id,name,category,data_type) VALUES({0},'{1}','{2}',{3})", pair.Value.Id.IntegerValue, name, LabelUtils.GetLabelFor(pair.Value.Definition.ParameterGroup).Replace("'", "''"), (int)pair.Value.Definition.ParameterGroup);
+                            currentQuery = cmd.CommandText;
 
-                        cmd.ExecuteNonQuery();
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        transaction.Commit();
                     }
-
-                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    log("Exception updating attr Table: " + ex.GetType().Name + ": " + ex.Message);
+                    log("Current Query: " + currentQuery);
+                    throw; // rethrow;
                 }
             }
         }
@@ -241,20 +284,30 @@ namespace Metamorphosis
         {
             using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
-                conn.Open();
-                using (var transaction = conn.BeginTransaction())
+                string currentQuery = "";
+                try
                 {
-                    foreach (var pair in _valueDict)
+                    conn.Open();
+                    using (var transaction = conn.BeginTransaction())
                     {
-                        string val = pair.Key;
-                        if (val.Contains("'")) val = val.Replace("'", "''"); // need to escape single quotes.
-                        var cmd = conn.CreateCommand();
-                        cmd.CommandText = String.Format("INSERT INTO _objects_val (id,value) VALUES({0},'{1}')", pair.Value, val);
+                        foreach (var pair in _valueDict)
+                        {
+                            string val = pair.Key;
+                            if (val.Contains("'")) val = val.Replace("'", "''"); // need to escape single quotes.
+                            var cmd = conn.CreateCommand();
+                            cmd.CommandText = String.Format("INSERT INTO _objects_val (id,value) VALUES({0},'{1}')", pair.Value, val);
 
-                        cmd.ExecuteNonQuery();
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        transaction.Commit();
                     }
-
-                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    log("Exception updating Value Table: " + ex.GetType().Name + ": " + ex.Message);
+                    log("Current Query: " + currentQuery);
+                    throw; // rethrow;
                 }
             }
         }
@@ -264,49 +317,62 @@ namespace Metamorphosis
 
             using (SQLiteConnection conn = new SQLiteConnection("Data Source=" + _dbFilename + ";Version=3;"))
             {
-                conn.Open();
-                using (var transaction = conn.BeginTransaction())
+                string currentQuery = "";
+                try
                 {
 
-                    foreach (Element e in elems)
+
+                    conn.Open();
+                    using (var transaction = conn.BeginTransaction())
                     {
-                        IList<Parameter> parms = Utilities.RevitUtils.GetParameters(e);
 
-                        foreach (var p in parms)
+                        foreach (Element e in elems)
                         {
-                            if (p.Definition == null) continue; // don't want that!
+                            IList<Parameter> parms = Utilities.RevitUtils.GetParameters(e);
 
-                            //Quick and Dirty - will need to call different stuff for each thing
-                            string val = null;
-
-                            switch (p.StorageType)
+                            foreach (var p in parms)
                             {
-                                case StorageType.String:
-                                    val = p.AsString();
-                                    break;
-                                default:
-                                    val = p.AsValueString();
-                                    break;
+                                if (p.Definition == null) continue; // don't want that!
+
+                                //Quick and Dirty - will need to call different stuff for each thing
+                                string val = null;
+
+                                switch (p.StorageType)
+                                {
+                                    case StorageType.String:
+                                        val = p.AsString();
+                                        break;
+                                    default:
+                                        val = p.AsValueString();
+                                        break;
+                                }
+
+
+                                if (val == null) val = "(n/a)";
+
+                                if (_valueDict.ContainsKey(val) == false)
+                                {
+                                    _valueId++;
+                                    _valueDict.Add(val, _valueId);
+                                }
+
+
+                                var cmd = conn.CreateCommand();
+                                cmd.CommandText = String.Format("INSERT INTO _objects_eav (entity_id,attribute_id,value_id) VALUES({0},{1},{2})", e.Id.IntegerValue, p.Id.IntegerValue, _valueDict[val]);
+                                currentQuery = cmd.CommandText;
+
+                                cmd.ExecuteNonQuery();
                             }
-                            
-
-                            if (val == null) val = "(n/a)";
-
-                            if (_valueDict.ContainsKey(val) == false)
-                            {
-                                _valueId++;
-                                _valueDict.Add(val, _valueId);
-                            }
-
-
-                            var cmd = conn.CreateCommand();
-                            cmd.CommandText = String.Format("INSERT INTO _objects_eav (entity_id,attribute_id,value_id) VALUES({0},{1},{2})", e.Id.IntegerValue, p.Id.IntegerValue, _valueDict[val]);
-
-                            cmd.ExecuteNonQuery();
                         }
-                    }
 
-                    transaction.Commit();
+                        transaction.Commit();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log("Exception updating EAV Table: " + ex.GetType().Name + ": " + ex.Message);
+                    log("Current Query: " + currentQuery);
+                    throw; // rethrow;
                 }
 
             }

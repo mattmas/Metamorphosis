@@ -38,7 +38,7 @@ namespace Metamorphosis
                 SnapshotMaker maker = new SnapshotMaker(form.SelectedDocument, form.Filename);
                 maker.Export();
 
-                TaskDialog td = new TaskDialog("Fingerprint");
+                TaskDialog td = new TaskDialog("Metamorphosis");
                 td.MainContent = "The snapshot file has been created.";
                 td.ExpandedContent = "File: " + filename + Environment.NewLine + "Duration: " + maker.Duration.TotalMinutes.ToString("F2") + " minutes.";
                 td.Show();

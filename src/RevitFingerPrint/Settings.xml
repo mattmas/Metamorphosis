@@ -17,4 +17,7 @@
   <DefaultSelection></DefaultSelection>
   <!-- Loglevel: Basic or Verbose -->
   <LogLevel>Basic</LogLevel>
+  <!-- The UseVersionGUID (for 2021+) will be faster, because it uses each elements EpisodeGUID to determine if a change was made.
+  However - it does seem that this is not perfect- some parameter changes do not trigger an Episode change? so OFF by default -->
+  <UseVersionGuid>False</UseVersionGuid>
 </Settings>

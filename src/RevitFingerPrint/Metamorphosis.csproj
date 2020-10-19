@@ -16,21 +16,21 @@
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;REVIT2020</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;REVIT2021</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;REVIT2020</DefineConstants>
+    <DefineConstants>TRACE;REVIT2021</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -126,8 +126,40 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release2020|AnyCPU'">
+    <OutputPath>bin\Release2020\</OutputPath>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <DefineConstants>TRACE;REVIT2019</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug2020|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <OutputPath>bin\Debug2020\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;REVIT2020</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <Choose>
     <When Condition="'$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Release'">
+      <ItemGroup>
+        <Reference Include="RevitAPI">
+          <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2021\RevitAPI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+        <Reference Include="RevitAPIUI">
+          <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2021\RevitAPIUI.dll</HintPath>
+          <Private>False</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <When Condition="'$(Configuration)' == 'Debug2020' Or '$(Configuration)' == 'Release2020'">
       <ItemGroup>
         <Reference Include="RevitAPI">
           <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\Revit 2020\RevitAPI.dll</HintPath>
@@ -320,6 +352,7 @@
     <EmbeddedResource Include="Images\clear-32.png" />
     <EmbeddedResource Include="Images\clear-96.png" />
     <EmbeddedResource Include="DBScript\UpgradeToV1.txt" />
+    <EmbeddedResource Include="DBScript\UpgradeToV1.1.txt" />
     <Content Include="Settings.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
