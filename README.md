@@ -25,5 +25,6 @@ Since the original hackathon, we've added a number of newer features, including:
 3. Enhanced Coloring/identifying of elements that changed.
 4. Configuration of colors
 5. Beginnings of API hooks for batch operation.
+6. Support specifically for Revit 2023 DocumentVersion changes - vastly improving the performance of comparisons.
 
 Watch this space as we see where it goes...
