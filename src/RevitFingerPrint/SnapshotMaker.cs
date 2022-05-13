@@ -131,6 +131,16 @@ namespace Metamorphosis
             _headerDict["ExportDateTicks"] = DateTime.Now.Ticks.ToString();
             _headerDict["ExportingUser"] = Environment.UserDomainName + "\\" + Environment.UserName;
             _headerDict["MachineName"] = Environment.MachineName;
+            _headerDict["RevitVersion"] = _doc.Application.VersionNumber;
+            _headerDict["RevitBuild"] = _doc.Application.VersionBuild;
+
+                #if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018
+                // do not support Document Version
+#else
+            DocumentVersion ver = Document.GetDocumentVersion(_doc);
+            _headerDict["DocumentGuid"] = ver.VersionGUID.ToString();
+            _headerDict["NumSaves"] = ver.NumberOfSaves.ToString();
+#endif
 
             updateHeaderTable();
 
@@ -547,6 +557,6 @@ namespace Metamorphosis
             return input.Replace("'", "''");
         }
 
-        #endregion
+#endregion
     }
 }

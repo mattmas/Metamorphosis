@@ -19,6 +19,7 @@ namespace Metamorphosis.Utilities
         #region PublicMethods
         internal static void ShowSolids(Document doc, IEnumerable<Solid> solids, IEnumerable<double> values)
         {
+           
             SpatialFieldManager sfm = SpatialFieldManager.GetSpatialFieldManager(doc.ActiveView);
             if (sfm == null) sfm = SpatialFieldManager.CreateSpatialFieldManager(doc.ActiveView, 1);
 

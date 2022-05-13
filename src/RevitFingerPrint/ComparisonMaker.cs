@@ -40,6 +40,7 @@ namespace Metamorphosis
         public IList<Category> RequestedCategories { get; set; }
         public double MoveTolerance { get; set; }
         public float RotateTolerance { get; set; }
+        public bool UseEpisodeGuid { get; set; }
         #endregion
 
         #region Constructor
@@ -62,6 +63,7 @@ namespace Metamorphosis
 
             _useGuidCompare = Metamorphosis.Utilities.Settings.GetVersionGuidOption();
             doc.Application.WriteJournalComment("GuidCompare Option: " + _useGuidCompare, false);
+            UseEpisodeGuid = false;
         }
         #endregion
 
@@ -71,11 +73,23 @@ namespace Metamorphosis
             // we want to load up a previous model, 
             readPrevious();
 
-            // read the existing data into memory
-            readModel();
+            if (UseEpisodeGuid && canUseEpisodeGuid() == false)
+            {
+                _doc.Application.WriteJournalComment("Falling back to traditional/EpisodeGuid not available!", false);
+                UseEpisodeGuid = false;
+            }
+            if (UseEpisodeGuid)
+            {
+                return compareWithEpisodeGuid();
+            }
+            else
+            {
+                // read the existing data into memory
+                readModel();
 
-            // make our comparisons
-            return compareData();
+                // make our comparisons
+                return compareData();
+            }
 
 
         }
@@ -118,6 +132,101 @@ namespace Metamorphosis
         #endregion
 
         #region PrivateMethods
+        private IList<Change> compareWithEpisodeGuid()
+        {
+#if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020 || REVIT2021 || REVIT2022
+            throw new ApplicationException("Unable to use EpisodeGuid comparison before 2023!");
+#else
+            List<Change> changes = new List<Change>();
+            Guid episodeGuid = Guid.Parse(_headerDict["DocumentGuid"]);
+
+            if (!AllCategories)
+            {
+                foreach (var c in RequestedCategories) _requestedCategoryNames.Add(c.Name);
+
+            }
+            // get the levels:
+            if (_allLevels == null)
+            {
+                FilteredElementCollector coll = new FilteredElementCollector(_doc);
+                coll.OfClass(typeof(Level));
+
+                _allLevels = coll.Cast<Level>().ToList();
+            }
+
+
+            DocumentDifference diff = _doc.GetChangedElements(episodeGuid);
+            var createdIds = diff.GetCreatedElementIds();
+            var modifiedIds = diff.GetModifiedElementIds();
+
+            // build the created:
+            foreach (var id in createdIds)
+            {
+                Element e = _doc.GetElement(id);
+                string catName = (e.Category != null) ? e.Category.Name : "(none)";
+
+                if (AllCategories || _requestedCategoryNames.Contains(catName))
+                {
+
+                    changes.Add(buildNew(makeRevitElemFromElement(e, false)));
+                }
+            }
+
+            // build the modified:
+            foreach( var id in modifiedIds )
+            {
+                Element e = _doc.GetElement(id);
+                string catName = (e.Category != null) ? e.Category.Name : "(none)";
+
+                if (AllCategories || _requestedCategoryNames.Contains(catName))
+                {
+                    RevitElement current = makeRevitElemFromElement(e, true);
+                    if (_idValues.ContainsKey(current.ElementId))
+                    {
+                        Change c = compareElements(current, _idValues[current.ElementId]);
+                        if (c != null)
+                        {
+                            changes.Add(c);
+                        }
+                        else
+                        {
+                            _doc.Application.WriteJournalComment($"Weird: EpisodeGUID Says that element {id}:{catName}:{e.Name} has changed, but we couldn't find a change? ignoring.", false);
+                        }
+                    }
+                    else
+                    {
+                        _doc.Application.WriteJournalComment($"WEIRD: Element id {current.ElementId}: {current.Category}: {e.Name} does not exist in the db data?", false);
+;                    }
+                  
+                }
+            }
+
+            if (diff.AreDeletedElementIdsAvailable)
+            {
+                var deletedIds = diff.GetDeletedElementIds();
+                foreach( var id in deletedIds )
+                {
+                    if (_idValues.ContainsKey(id.IntegerValue))
+                    {
+                        RevitElement previous = _idValues[id.IntegerValue];
+                        if (!AllCategories && (_requestedCategoryNames.Contains(previous.Category) == false)) continue; // do not include
+                        changes.Add(buildDeleted(previous));
+                    }
+                    else
+                    {
+                        _doc.Application.WriteJournalComment($"Weird! Element Id {id} is deleted, but we don't have a previous record of it???", false);
+                    }
+                }
+
+            }
+            else
+            {
+                _doc.Application.WriteJournalComment("NOTE: Because this is not a workshared file, Deleted Elements are not recorded. Please do not use the Document Episode GUID approach if you need details on the Deleted elements!", false);
+            }
+
+            return changes;
+#endif
+        }
         private IList<Change> compareData()
         {
             List<Change> changes = new List<Change>();
@@ -473,144 +582,34 @@ namespace Metamorphosis
                 if (_categoryCount.ContainsKey(c.Name) == false) _categoryCount[c.Name] = 0;
                 _categoryCount[c.Name]++;
 
-                var revitElem = new RevitElement() { ElementId = e.Id.IntegerValue, Category = (c != null) ? c.Name : "(none)" };
-#if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020
-                // do nothing here
-#else
-                if (e.VersionGuid != null) revitElem.VersionGuid = e.VersionGuid.ToString();
-#endif
+                // consolidate
+                var revitElem = makeRevitElemFromElement(e, true);
+               
                 _currentElems.Add(e.Id.IntegerValue, revitElem);
 
-                IList<Autodesk.Revit.DB.Parameter> parms = Utilities.RevitUtils.GetParameters(e);
-                foreach( var p in parms)
-                {
-                    //Quick and Dirty - will need to call different stuff for each thing
-                    try
-                    {
-                        if (p.Definition == null) continue; // we don't want this!
-                        string definition = p.Definition.Name;
-                        string val = null;
-                        switch ( p.StorageType)
-                        {
-                            case StorageType.String:
-                                val = p.AsString();
-                                break;
-
-                            default:
-                                val = p.AsValueString();
-                                break;
-                        }
-
-                        if (val == null) val = "(n/a)";
-
-                        revitElem.Parameters[p.Definition.Name] = val;
-                    }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine("Weird database: " + ex);
-                    }
-                }
-                revitElem.IsType = isTypes;
-
-                if (!isTypes)
-                {
-                    // seen at least one case where retrieving bounding box threw an internal error
-                    BoundingBoxXYZ box = null;
-                    try
-                    {
-                        box = e.get_BoundingBox(null);
-                    }
-                    catch (Exception ex)
-                    {
-                        _doc.Application.WriteJournalComment("Encountered error trying to get BoundingBox of Element Id: " + e.Id + " Exception: " + ex.GetType().Name + ": " + ex.Message, false);
-                        if (ex is Autodesk.Revit.Exceptions.ApplicationException)
-                        {
-                            var aex = ex as Autodesk.Revit.Exceptions.ApplicationException;
-                            _doc.Application.WriteJournalComment("  => " + aex.FunctionId + " " + aex.HResult + " " + aex.Source, false);
-                        }
-                    }
-                    if (box != null) revitElem.BoundingBox = box;
-
-                    LocationPoint lp = e.Location as LocationPoint;
-                    if (lp != null)
-                    {
-                        try
-                        { 
-                        revitElem.LocationPoint = lp.Point;
-                            if (e is FamilyInstance)
-                            {
-                                // special cases.
-                                if ((e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Columns) ||
-                                    (e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_StructuralColumns))
-                                {
-                                    // in this case, get the Z value from the 
-                                    var offset = e.get_Parameter(BuiltInParameter.FAMILY_BASE_LEVEL_OFFSET_PARAM);
-
-                                    if ((e.LevelId != ElementId.InvalidElementId) && (offset != null))
-                                    {
-                                        Level levPt1 = _doc.GetElement(e.LevelId) as Level;
-                                        double newZ = levPt1.Elevation + offset.AsDouble();
-                                        revitElem.LocationPoint = new XYZ(revitElem.LocationPoint.X, revitElem.LocationPoint.Y, newZ);
-                                    }
-                                }
-
-                                if ((e as FamilyInstance).CanRotate)
-                                {
-                                    revitElem.Rotation = (float)lp.Rotation;
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine("Error on " + e.Name + ": " + e.GetType().Name + ": " + ex.Message);
-                        }
-                    }
-                    else
-                    {
-                        LocationCurve lc = e.Location as LocationCurve;
-                        if (lc != null)
-                        {
-                            if (lc.Curve.IsBound)
-                            {
-                                revitElem.LocationPoint = lc.Curve.GetEndPoint(0);
-                                revitElem.LocationPoint2 = lc.Curve.GetEndPoint(1);
-                            }
-                        }
-                        else
-                        {
-                            // special case
-                            if (e is Grid)
-                            {
-                                Grid g = e as Grid;
-                                revitElem.LocationPoint = g.Curve.GetEndPoint(0);
-                                revitElem.LocationPoint2 = g.Curve.GetEndPoint(1);
-                            }
-                        }
-                    }
-
-
-                    if (e.LevelId != ElementId.InvalidElementId)
-                    {
-                        revitElem.Level = _doc.GetElement(e.LevelId).Name;
-                    }
-                    else
-                    {
-                        if (revitElem.LocationPoint != null)
-                        {
-
-
-                            // we want the next level down from the z value...
-                            Level lev = Utilities.RevitUtils.GetNextLevelDown(revitElem.LocationPoint, _allLevels);
-                            if (lev != null) revitElem.Level = lev.Name;
-                        }
-                    }
-                }
+              
                 
             }
         }
         private void readPrevious()
         {
             readHeader();
+
+            // DUH: We still need to read the database.
+            // EpisodeGUID helps us with knowing what elements have changed - but 
+            // NOT with knowing what has changed about them!
+
+            //if (UseEpisodeGuid)
+            //{
+            //    if (canUseEpisodeGuid())
+            //    {
+            //        _doc.Application.WriteJournalComment("Using Document EpisodeGUID for retrieval!", true);
+            //        return;
+            //    }
+            //    _doc.Application.WriteJournalComment("Unable to use Document EpisodeGUID for retrieval! Continuing with traditional!", true);
+            //}
+            //UseEpisodeGuid = false; // reset, in case.
+
             readParameters();
             readValues();
             readElements();
@@ -805,6 +804,190 @@ namespace Metamorphosis
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Determine if we can use EpisodeGuid, based on the header information.
+        /// </summary>
+        /// <returns></returns>
+        private bool canUseEpisodeGuid()
+        {
+            if (_headerDict == null) return false;
+
+            // _headerDict["DocumentGuid"] = ver.VersionGUID.ToString();
+            // _headerDict["NumSaves"] = ver.NumberOfSaves.ToString();
+
+            // not sure how we would get in here without being a sufficient version of Revit, but let's check.
+            if (Int32.TryParse(_doc.Application.VersionNumber, out int verNum))
+            { 
+                if (verNum < 2023)
+                {
+                    _doc.Application.WriteJournalComment("DocumentVersion not supported in Revit version " + verNum, false);
+                    return false;
+                }
+            }
+
+            if (_headerDict.ContainsKey("DocumentGuid"))
+            {
+                if (Guid.TryParse(_headerDict["DocumentGuid"], out Guid test))
+                {
+                    return true;
+                }
+                _doc.Application.WriteJournalComment("Header contains a DocumentGUID, but it is not a valid GUID? (" + _headerDict["DocumentGuid"] + ")? Cannot leverage it!", true);
+            }
+            else
+            {
+                _doc.Application.WriteJournalComment("Header does not contain a DocumentGUID. Cannot leverage it!", true);
+            }
+
+            return false;
+        }
+
+        private RevitElement makeRevitElemFromId(ElementId id, bool withParams)
+        {
+            Element e = _doc.GetElement(id);
+            return makeRevitElemFromElement(e, withParams);
+        }
+        private RevitElement makeRevitElemFromElement(Element e, bool withParams)
+        {
+           
+            Category c = e.Category;
+
+            var revitElem = new RevitElement() { ElementId = e.Id.IntegerValue, Category = (c != null) ? c.Name : "(none)" };
+#if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020
+                // do nothing here
+#else
+            if (e.VersionGuid != null) revitElem.VersionGuid = e.VersionGuid.ToString();
+#endif
+
+            if (withParams)
+            {
+                IList<Autodesk.Revit.DB.Parameter> parms = Utilities.RevitUtils.GetParameters(e);
+                foreach (var p in parms)
+                {
+                    //Quick and Dirty - will need to call different stuff for each thing
+                    try
+                    {
+                        if (p.Definition == null) continue; // we don't want this!
+                        string definition = p.Definition.Name;
+                        string val = null;
+                        switch (p.StorageType)
+                        {
+                            case StorageType.String:
+                                val = p.AsString();
+                                break;
+
+                            default:
+                                val = p.AsValueString();
+                                break;
+                        }
+
+                        if (val == null) val = "(n/a)";
+
+                        revitElem.Parameters[p.Definition.Name] = val;
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Weird database: " + ex);
+                    }
+                }
+            }
+            revitElem.IsType = e is ElementType;
+
+            if (!revitElem.IsType)
+            {
+                // seen at least one case where retrieving bounding box threw an internal error
+                BoundingBoxXYZ box = null;
+                try
+                {
+                    box = e.get_BoundingBox(null);
+                }
+                catch (Exception ex)
+                {
+                    _doc.Application.WriteJournalComment("Encountered error trying to get BoundingBox of Element Id: " + e.Id + " Exception: " + ex.GetType().Name + ": " + ex.Message, false);
+                    if (ex is Autodesk.Revit.Exceptions.ApplicationException)
+                    {
+                        var aex = ex as Autodesk.Revit.Exceptions.ApplicationException;
+                        _doc.Application.WriteJournalComment("  => " + aex.FunctionId + " " + aex.HResult + " " + aex.Source, false);
+                    }
+                }
+                if (box != null) revitElem.BoundingBox = box;
+
+                LocationPoint lp = e.Location as LocationPoint;
+                if (lp != null)
+                {
+                    try
+                    {
+                        revitElem.LocationPoint = lp.Point;
+                        if (e is FamilyInstance)
+                        {
+                            // special cases.
+                            if ((e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Columns) ||
+                                (e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_StructuralColumns))
+                            {
+                                // in this case, get the Z value from the 
+                                var offset = e.get_Parameter(BuiltInParameter.FAMILY_BASE_LEVEL_OFFSET_PARAM);
+
+                                if ((e.LevelId != ElementId.InvalidElementId) && (offset != null))
+                                {
+                                    Level levPt1 = _doc.GetElement(e.LevelId) as Level;
+                                    double newZ = levPt1.Elevation + offset.AsDouble();
+                                    revitElem.LocationPoint = new XYZ(revitElem.LocationPoint.X, revitElem.LocationPoint.Y, newZ);
+                                }
+                            }
+
+                            if ((e as FamilyInstance).CanRotate)
+                            {
+                                revitElem.Rotation = (float)lp.Rotation;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Error on " + e.Name + ": " + e.GetType().Name + ": " + ex.Message);
+                    }
+                }
+                else
+                {
+                    LocationCurve lc = e.Location as LocationCurve;
+                    if (lc != null)
+                    {
+                        if (lc.Curve.IsBound)
+                        {
+                            revitElem.LocationPoint = lc.Curve.GetEndPoint(0);
+                            revitElem.LocationPoint2 = lc.Curve.GetEndPoint(1);
+                        }
+                    }
+                    else
+                    {
+                        // special case
+                        if (e is Grid)
+                        {
+                            Grid g = e as Grid;
+                            revitElem.LocationPoint = g.Curve.GetEndPoint(0);
+                            revitElem.LocationPoint2 = g.Curve.GetEndPoint(1);
+                        }
+                    }
+                }
+
+
+                if (e.LevelId != ElementId.InvalidElementId)
+                {
+                    revitElem.Level = _doc.GetElement(e.LevelId).Name;
+                }
+                else
+                {
+                    if (revitElem.LocationPoint != null)
+                    {
+
+
+                        // we want the next level down from the z value...
+                        Level lev = Utilities.RevitUtils.GetNextLevelDown(revitElem.LocationPoint, _allLevels);
+                        if (lev != null) revitElem.Level = lev.Name;
+                    }
+                }
+            }
+            return revitElem;
         }
 
         /// <summary>

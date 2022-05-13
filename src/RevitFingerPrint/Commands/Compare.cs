@@ -38,10 +38,12 @@ namespace Metamorphosis
                 bool dateStamp = form.DateStamp;
 
                 Document chosenDoc = form.Document;
+                bool useEpisodeGUID = form.UseDocumentGUID;
 
                 ComparisonMaker comparison = new ComparisonMaker(chosenDoc, filename);
                 comparison.AllCategories = form.AllCategories;
                 comparison.RequestedCategories = form.SelectedCategories;
+                comparison.UseEpisodeGuid = form.UseDocumentGUID;
 
                 try
                 {
@@ -133,6 +135,8 @@ namespace Metamorphosis
                 else
                 {
                     folder = Path.GetDirectoryName(doc.PathName);
+                    if (Directory.Exists(folder) == false) return String.Empty;  // need to for Docs paths, etc.
+
                     filename = Path.GetFileNameWithoutExtension(doc.PathName);
                 }
                
@@ -292,6 +296,8 @@ namespace Metamorphosis
 
         private string getLastFilename(string folder, string filename)
         {
+            if (Directory.Exists(folder) == false) return String.Empty;
+
             string[] files = Directory.GetFiles(folder, filename + "*.sdb");
 
             if (files.Length == 0) return String.Empty;

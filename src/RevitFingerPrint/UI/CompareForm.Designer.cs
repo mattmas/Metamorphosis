@@ -45,14 +45,16 @@
             this.btnSaveCategories = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.cbUseDocumentGuid = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 110);
+            this.label1.Location = new System.Drawing.Point(32, 262);
+            this.label1.Margin = new System.Windows.Forms.Padding(8, 0, 8, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(243, 13);
+            this.label1.Size = new System.Drawing.Size(652, 32);
             this.label1.TabIndex = 0;
             this.label1.Text = "Compare a model against a previous snapshot file:";
             this.label1.Click += new System.EventHandler(this.label1_Click);
@@ -63,17 +65,19 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tbPrevious.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
             this.tbPrevious.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
-            this.tbPrevious.Location = new System.Drawing.Point(12, 137);
+            this.tbPrevious.Location = new System.Drawing.Point(32, 327);
+            this.tbPrevious.Margin = new System.Windows.Forms.Padding(8, 7, 8, 7);
             this.tbPrevious.Name = "tbPrevious";
-            this.tbPrevious.Size = new System.Drawing.Size(339, 20);
+            this.tbPrevious.Size = new System.Drawing.Size(897, 38);
             this.tbPrevious.TabIndex = 1;
             // 
             // button1
             // 
             this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(365, 135);
+            this.button1.Location = new System.Drawing.Point(973, 322);
+            this.button1.Margin = new System.Windows.Forms.Padding(8, 7, 8, 7);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.Size = new System.Drawing.Size(200, 55);
             this.button1.TabIndex = 2;
             this.button1.Text = "Browse";
             this.toolTip1.SetToolTip(this.button1, "Browse for the previous snapshot.");
@@ -88,9 +92,10 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 172);
+            this.label2.Location = new System.Drawing.Point(32, 410);
+            this.label2.Margin = new System.Windows.Forms.Padding(8, 0, 8, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(173, 13);
+            this.label2.Size = new System.Drawing.Size(460, 32);
             this.label2.TabIndex = 3;
             this.label2.Text = "Choose the Categories to compare:";
             // 
@@ -100,18 +105,20 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.treeView1.CheckBoxes = true;
-            this.treeView1.Location = new System.Drawing.Point(15, 207);
+            this.treeView1.Location = new System.Drawing.Point(40, 494);
+            this.treeView1.Margin = new System.Windows.Forms.Padding(8, 7, 8, 7);
             this.treeView1.Name = "treeView1";
-            this.treeView1.Size = new System.Drawing.Size(426, 211);
+            this.treeView1.Size = new System.Drawing.Size(1129, 498);
             this.treeView1.TabIndex = 4;
             this.treeView1.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.onAfterCheck);
             // 
             // btnStart
             // 
             this.btnStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnStart.Location = new System.Drawing.Point(366, 437);
+            this.btnStart.Location = new System.Drawing.Point(976, 1042);
+            this.btnStart.Margin = new System.Windows.Forms.Padding(8, 7, 8, 7);
             this.btnStart.Name = "btnStart";
-            this.btnStart.Size = new System.Drawing.Size(75, 23);
+            this.btnStart.Size = new System.Drawing.Size(200, 55);
             this.btnStart.TabIndex = 5;
             this.btnStart.Text = "Start";
             this.btnStart.UseVisualStyleBackColor = true;
@@ -121,9 +128,10 @@
             // 
             this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.button2.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.button2.Location = new System.Drawing.Point(264, 437);
+            this.button2.Location = new System.Drawing.Point(704, 1042);
+            this.button2.Margin = new System.Windows.Forms.Padding(8, 7, 8, 7);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(75, 23);
+            this.button2.Size = new System.Drawing.Size(200, 55);
             this.button2.TabIndex = 6;
             this.button2.Text = "Cancel";
             this.button2.UseVisualStyleBackColor = true;
@@ -133,9 +141,10 @@
             this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.label4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(2, 8);
+            this.label4.Location = new System.Drawing.Point(5, 19);
+            this.label4.Margin = new System.Windows.Forms.Padding(8, 0, 8, 0);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(441, 50);
+            this.label4.Size = new System.Drawing.Size(1176, 119);
             this.label4.TabIndex = 9;
             this.label4.Text = "DISCLAIMER: This application checks parameter values and some aspects of graphic " +
     "changes - but it is not absolute. It is intended to assist you, not a replacemen" +
@@ -145,9 +154,10 @@
             // 
             this.cbDateTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.cbDateTime.AutoSize = true;
-            this.cbDateTime.Location = new System.Drawing.Point(33, 436);
+            this.cbDateTime.Location = new System.Drawing.Point(82, 1027);
+            this.cbDateTime.Margin = new System.Windows.Forms.Padding(8, 7, 8, 7);
             this.cbDateTime.Name = "cbDateTime";
-            this.cbDateTime.Size = new System.Drawing.Size(116, 17);
+            this.cbDateTime.Size = new System.Drawing.Size(290, 36);
             this.cbDateTime.TabIndex = 10;
             this.cbDateTime.Text = "Date  stamp output";
             this.toolTip1.SetToolTip(this.cbDateTime, "Add a date stamp to the output results filename.");
@@ -156,9 +166,10 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 62);
+            this.label3.Location = new System.Drawing.Point(32, 148);
+            this.label3.Margin = new System.Windows.Forms.Padding(8, 0, 8, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(39, 13);
+            this.label3.Size = new System.Drawing.Size(100, 32);
             this.label3.TabIndex = 11;
             this.label3.Text = "Model:";
             // 
@@ -167,9 +178,10 @@
             this.cbDocumentChoice.DisplayMember = "Title";
             this.cbDocumentChoice.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbDocumentChoice.FormattingEnabled = true;
-            this.cbDocumentChoice.Location = new System.Drawing.Point(12, 79);
+            this.cbDocumentChoice.Location = new System.Drawing.Point(32, 188);
+            this.cbDocumentChoice.Margin = new System.Windows.Forms.Padding(8, 7, 8, 7);
             this.cbDocumentChoice.Name = "cbDocumentChoice";
-            this.cbDocumentChoice.Size = new System.Drawing.Size(339, 21);
+            this.cbDocumentChoice.Size = new System.Drawing.Size(897, 39);
             this.cbDocumentChoice.TabIndex = 12;
             this.toolTip1.SetToolTip(this.cbDocumentChoice, "Model to compare against previous results.");
             this.cbDocumentChoice.SelectedIndexChanged += new System.EventHandler(this.onSelectedModelChange);
@@ -178,29 +190,46 @@
             // 
             this.cbSelectionSets.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbSelectionSets.FormattingEnabled = true;
-            this.cbSelectionSets.Location = new System.Drawing.Point(203, 169);
+            this.cbSelectionSets.Location = new System.Drawing.Point(541, 403);
+            this.cbSelectionSets.Margin = new System.Windows.Forms.Padding(8, 7, 8, 7);
             this.cbSelectionSets.Name = "cbSelectionSets";
-            this.cbSelectionSets.Size = new System.Drawing.Size(148, 21);
+            this.cbSelectionSets.Size = new System.Drawing.Size(388, 39);
             this.cbSelectionSets.TabIndex = 13;
             this.toolTip1.SetToolTip(this.cbSelectionSets, "Previous category configurations");
             this.cbSelectionSets.SelectedIndexChanged += new System.EventHandler(this.onCategorySettingChanged);
             // 
             // btnSaveCategories
             // 
-            this.btnSaveCategories.Location = new System.Drawing.Point(365, 169);
+            this.btnSaveCategories.Location = new System.Drawing.Point(973, 403);
+            this.btnSaveCategories.Margin = new System.Windows.Forms.Padding(8, 7, 8, 7);
             this.btnSaveCategories.Name = "btnSaveCategories";
-            this.btnSaveCategories.Size = new System.Drawing.Size(75, 23);
+            this.btnSaveCategories.Size = new System.Drawing.Size(200, 55);
             this.btnSaveCategories.TabIndex = 14;
             this.btnSaveCategories.Text = "Save";
             this.toolTip1.SetToolTip(this.btnSaveCategories, "Save the currently selected categories for future use.");
             this.btnSaveCategories.UseVisualStyleBackColor = true;
             this.btnSaveCategories.Click += new System.EventHandler(this.btnSaveCategories_Click);
             // 
+            // cbUseDocumentGuid
+            // 
+            this.cbUseDocumentGuid.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.cbUseDocumentGuid.AutoSize = true;
+            this.cbUseDocumentGuid.Location = new System.Drawing.Point(82, 1088);
+            this.cbUseDocumentGuid.Margin = new System.Windows.Forms.Padding(8, 7, 8, 7);
+            this.cbUseDocumentGuid.Name = "cbUseDocumentGuid";
+            this.cbUseDocumentGuid.Size = new System.Drawing.Size(419, 36);
+            this.cbUseDocumentGuid.TabIndex = 15;
+            this.cbUseDocumentGuid.Text = "Use EpisodeGUID Difference";
+            this.toolTip1.SetToolTip(this.cbUseDocumentGuid, "Uses a new API mechanism for checking differences available in Revit 2023+");
+            this.cbUseDocumentGuid.UseVisualStyleBackColor = true;
+            this.cbUseDocumentGuid.CheckedChanged += new System.EventHandler(this.onEpisodeGUIDChecked);
+            // 
             // CompareForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(16F, 31F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(453, 497);
+            this.ClientSize = new System.Drawing.Size(1208, 1185);
+            this.Controls.Add(this.cbUseDocumentGuid);
             this.Controls.Add(this.btnSaveCategories);
             this.Controls.Add(this.cbSelectionSets);
             this.Controls.Add(this.cbDocumentChoice);
@@ -215,6 +244,7 @@
             this.Controls.Add(this.tbPrevious);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.Margin = new System.Windows.Forms.Padding(8, 7, 8, 7);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "CompareForm";
@@ -244,5 +274,6 @@
         private System.Windows.Forms.Button btnSaveCategories;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
+        private System.Windows.Forms.CheckBox cbUseDocumentGuid;
     }
 }

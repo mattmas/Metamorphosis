@@ -25,9 +25,12 @@ namespace Metamorphosis.UI
 
         public IList<Document> AllDocuments { get; set; }
 
+        public Boolean UseDocumentGUID { get { return cbUseDocumentGuid.Checked; } }
+
         private IFilenameHint _hint;
         private Document _doc;
         private bool _suspendTreeUpdates = false;
+        private static bool _UseDocumentGUID = false;
         #endregion
 
         public CompareForm(Document doc, IList<Document> allDocs, IFilenameHint hint)
@@ -40,6 +43,13 @@ namespace Metamorphosis.UI
 
 
             this.Text += " " + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+
+            cbUseDocumentGuid.Checked = _UseDocumentGUID;
+            cbUseDocumentGuid.Enabled = false;
+            if (Double.TryParse(doc.Application.VersionNumber, out double revitVer))
+            {
+                cbUseDocumentGuid.Enabled = (revitVer >= 2023.0);
+            }
 
             _doc = doc;
         }
@@ -342,6 +352,21 @@ namespace Metamorphosis.UI
             foreach( TreeNode child in node.Nodes)
             {
                 updateChecksByInfo(child, idsToEnable, typesToEnable);
+            }
+        }
+
+        private void onEpisodeGUIDChecked(object sender, EventArgs e)
+        {
+            if (cbUseDocumentGuid.Checked)
+            {
+                Document = cbDocumentChoice.SelectedItem as Document;
+                if (Document != null)
+                {
+                    if (Document.IsWorkshared == false)
+                    {
+                        MessageBox.Show("Warning: This model is not workshared, and as such if you use this method, we will not be able to identify DELETED elements compared to the previous model.");
+                    }
+                }
             }
         }
     }
