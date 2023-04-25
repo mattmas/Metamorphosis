@@ -250,7 +250,7 @@ namespace Metamorphosis.UI
             if (node.Tag is Category)
             {
                 Category c = node.Tag as Category;
-                if (node.Checked) cf.Settings.Add(new Utilities.CategorySetting() { Name = c.Name, CategoryId = c.Id.IntegerValue, Enabled = true });
+                if (node.Checked) cf.Settings.Add(new Utilities.CategorySetting() { Name = c.Name, CategoryId = c.Id.AsInt32(), Enabled = true });
             }
 
             // let's handle CategoryType level selections differently. Store just the categorytype, and none of the children.
@@ -299,8 +299,8 @@ namespace Metamorphosis.UI
             updateChecks(treeView1.Nodes[0], false);
 
             // now let's retrieve all of the nodes which are set.
-            HashSet<int> idsToEnable = new HashSet<int>();
-            HashSet<int> typesToEnable = new HashSet<int>();
+            HashSet<long> idsToEnable = new HashSet<long>();
+            HashSet<long> typesToEnable = new HashSet<long>();
             Utilities.CategorySettingsFile cf = cbSelectionSets.SelectedItem as Utilities.CategorySettingsFile;
             if (cf != null)
             {
@@ -332,12 +332,12 @@ namespace Metamorphosis.UI
             }
         }
 
-        private void updateChecksByInfo(TreeNode node, HashSet<int> idsToEnable, HashSet<int> typesToEnable)
+        private void updateChecksByInfo(TreeNode node, HashSet<long> idsToEnable, HashSet<long> typesToEnable)
         {
             Category c = node.Tag as Category;
             if (c != null)
             {
-                if (idsToEnable.Contains(c.Id.IntegerValue)) node.Checked = true;
+                if (idsToEnable.Contains(c.Id.AsLong())) node.Checked = true;
 
             }
             if (node.Tag is CategoryType)

@@ -60,10 +60,15 @@ namespace Metamorphosis.UI
                                 string baseName = Path.GetFileNameWithoutExtension(centralPath);
                                 filename = Path.Combine(folder, "Snapshots", baseName + "_" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".sdb");
                             }
-                            if (centralPath.ToUpper().StartsWith("BIM360:"))
+                            if (centralPath.ToUpper().StartsWith("BIM360:") || centralPath.ToUpper().StartsWith("AUTODESK DOC"))
                         {
-                            filename = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), filename + ".sdb");
+                            string baseName = Path.GetFileNameWithoutExtension(filename);
+                            filename = baseName + "_" + DateTime.Now.ToString("yyyyMMdd_hhmm") + ".sdb";
+
+                            filename = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), baseName + ".sdb");
                         }
+
+                        if (filename.ToUpper().EndsWith(".SDB") == false) filename += ".sdb";
                        
                     }
                     catch { }

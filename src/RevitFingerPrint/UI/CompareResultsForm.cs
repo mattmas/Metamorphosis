@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
+using Metamorphosis.Objects;
 
 namespace Metamorphosis.UI
 {
@@ -25,7 +26,7 @@ namespace Metamorphosis.UI
         private enum ActionEnum { None,ShowElement, Shutdown, ColorElements, RemoveColor, ResetColors, ShowSolid, ShowMove, ShowRotation, Select};
         private ActionEnum _action = ActionEnum.None;
         private ICollection<ElementId> _idsToShow;
-        private Dictionary<int, bool> _viewsColored = new Dictionary<int, bool>();
+        private Dictionary<long, bool> _viewsColored = new Dictionary<long, bool>();
         private IList<Objects.Change> _selectedItems;
         private TreeNode _rightClickedNode;
 
@@ -127,7 +128,16 @@ namespace Metamorphosis.UI
                 return;
             }
             List<ElementId> ids = new List<ElementId>();
-            foreach (var change in _selectedItems) ids.Add(new ElementId(change.ElementId));
+
+            foreach (var change in _selectedItems)
+            {
+#if LONGELEMENTIDS
+    var eid = new ElementId(change.ElementId);
+#else
+                var eid = new ElementId((int)change.ElementId);
+#endif
+                ids.Add(eid);
+            }
             
             _uiDoc.ShowElements(ids);
             _uiDoc.Selection.SetElementIds(ids);
@@ -138,7 +148,16 @@ namespace Metamorphosis.UI
             if (_isLinkDoc) return; // can't
 
             List<ElementId> ids = new List<ElementId>();
-            foreach (var item in _selectedItems) ids.Add(new ElementId(item.ElementId));
+
+            foreach (var item in _selectedItems)
+            {
+#if LONGELEMENTIDS
+    var eid = new ElementId(item.ElementId);
+#else
+                var eid = new ElementId((int)item.ElementId);
+#endif
+                ids.Add(eid);
+            }
             _uiDoc.Selection.SetElementIds(ids);
         }
 
@@ -156,7 +175,15 @@ namespace Metamorphosis.UI
 
                 // show the vectors, and zoom.
                 List<ElementId> ids = new List<ElementId>();
-                foreach (var change in _selectedItems) ids.Add(new ElementId(change.ElementId));
+                foreach (var change in _selectedItems)
+                {
+#if LONGELEMENTIDS
+    var eid = new ElementId(change.ElementId);
+#else
+                    var eid = new ElementId((int)change.ElementId);
+#endif
+                    ids.Add(eid);
+                }
 
                 if (!_isLinkDoc) _uiDoc.ShowElements(ids);
 
@@ -181,7 +208,15 @@ namespace Metamorphosis.UI
 
                 // show the vectors, and zoom.
                 List<ElementId> ids = new List<ElementId>();
-                foreach (var change in _selectedItems) ids.Add(new ElementId(change.ElementId));
+                foreach (var change in _selectedItems)
+                {
+#if LONGELEMENTIDS
+    var eid = new ElementId(change.ElementId);
+#else
+                    var eid = new ElementId((int)change.ElementId);
+#endif
+                    ids.Add(eid);
+                }
 
                 if (!_isLinkDoc) _uiDoc.ShowElements(ids);
 
@@ -258,7 +293,7 @@ namespace Metamorphosis.UI
             Transaction t = new Transaction(_uiDoc.Document, "Color Changed Elements");
             t.Start();
 
-            if (!_isResetting) _viewsColored[_uiDoc.ActiveGraphicalView.Id.IntegerValue] = true;
+            if (!_isResetting) _viewsColored[_uiDoc.ActiveGraphicalView.Id.AsLong()] = true;
 
             Autodesk.Revit.DB.Color overrideColor = new Autodesk.Revit.DB.Color(0, 0, 0);
 
@@ -313,7 +348,7 @@ namespace Metamorphosis.UI
                 ogs.SetCutLineColor(overrideColor);
                 
       
-#endif                
+#endif
                 foreach (ElementId id in ids)
                 {
                     _uiDoc.ActiveGraphicalView.SetElementOverrides(id, ogs);
@@ -333,7 +368,11 @@ namespace Metamorphosis.UI
             {
                 if (pair.Value == false) continue;
 
+#if LONGELEMENTIDS
                 ElementId id = new ElementId(pair.Key);
+#else
+                 ElementId id = new ElementId((int)pair.Key);
+#endif
 
                 Autodesk.Revit.DB.View v = _uiDoc.Document.GetElement(id) as Autodesk.Revit.DB.View;
                 removeColor(v);
@@ -349,7 +388,7 @@ namespace Metamorphosis.UI
             Transaction t = new Transaction(_uiDoc.Document, "Remove Color of Changed Elements");
             t.Start();
 
-            if (!_isResetting) _viewsColored[_uiDoc.ActiveGraphicalView.Id.IntegerValue] = false;
+            if (!_isResetting) _viewsColored[_uiDoc.ActiveGraphicalView.Id.AsLong()] = false;
 
             var changes = _changes.Where(c => c.ChangeType != Objects.Change.ChangeTypeEnum.DeletedElement).ToList();
 
@@ -373,8 +412,11 @@ namespace Metamorphosis.UI
             List<ElementId> ids = new List<ElementId>();
             foreach( var c in changes.Where( n => n.ChangeType != Objects.Change.ChangeTypeEnum.DeletedElement) )
             {
-               
+#if LONGELEMENTIDS
                 ids.Add(new ElementId(c.ElementId));
+#else
+                ids.Add(new ElementId((int)c.ElementId));
+#endif
             }
             return ids;
         }
@@ -520,9 +562,13 @@ namespace Metamorphosis.UI
                 else
                 {
                     // we have an id?
-                    int id = (int)e.Node.Tag;
-
+#if LONGELEMENTIDS
+                    long id = (long)e.Node.Tag;
                     _idsToShow = new ElementId[] { new ElementId(id) };
+#else
+                    int id = (int)e.Node.Tag;
+                    _idsToShow = new ElementId[] { new ElementId(id) };
+#endif
                     if (!_isLinkDoc) _action = ActionEnum.ShowElement;
                 }
             }

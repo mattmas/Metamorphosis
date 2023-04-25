@@ -29,8 +29,8 @@ namespace Metamorphosis
 
 
         // TODO: separate categories by dictionary of category, elementid, parameter
-        private Dictionary<int, RevitElement> _idValues = new Dictionary<int, RevitElement>();
-        private Dictionary<int, RevitElement> _currentElems = new Dictionary<int, RevitElement>();
+        private Dictionary<long, RevitElement> _idValues = new Dictionary<long, RevitElement>();
+        private Dictionary<long, RevitElement> _currentElems = new Dictionary<long, RevitElement>();
 
 
         #endregion
@@ -206,9 +206,9 @@ namespace Metamorphosis
                 var deletedIds = diff.GetDeletedElementIds();
                 foreach( var id in deletedIds )
                 {
-                    if (_idValues.ContainsKey(id.IntegerValue))
+                    if (_idValues.ContainsKey(id.AsLong()))
                     {
-                        RevitElement previous = _idValues[id.IntegerValue];
+                        RevitElement previous = _idValues[id.AsLong()];
                         if (!AllCategories && (_requestedCategoryNames.Contains(previous.Category) == false)) continue; // do not include
                         changes.Add(buildDeleted(previous));
                     }
@@ -321,7 +321,11 @@ namespace Metamorphosis
 
         private Change buildNew(RevitElement current)
         {
+#if LONGELEMENTIDS
             Element e = _doc.GetElement(new ElementId(current.ElementId));
+#else
+            Element e = _doc.GetElement(new ElementId((int)current.ElementId));
+#endif
 
             Change c = new Change() { ElementId = current.ElementId, UniqueId = e.UniqueId, Category = current.Category, ChangeType = Change.ChangeTypeEnum.NewElement, Level = (current.Level != null) ? current.Level : "", IsType = current.IsType };
             c.BoundingBoxDescription = Utilities.RevitUtils.SerializeBoundingBox(current.BoundingBox);
@@ -335,6 +339,10 @@ namespace Metamorphosis
             int numParmsChanged = 0;
             foreach (var pair in current.Parameters)
             {
+                // we don't want to look at "EditedBy"... we think, because it will be the only thing
+                //reported.
+
+
                 if (previous.Parameters.ContainsKey(pair.Key))
                 {
                     // test if they match
@@ -351,7 +359,11 @@ namespace Metamorphosis
             }
             if (numParmsChanged > 0)
             {
+#if LONGELEMENTIDS
                 Element e = _doc.GetElement(new ElementId(current.ElementId));
+#else
+                Element e = _doc.GetElement(new ElementId((int)current.ElementId));
+#endif
                 Change c = new Change()
                 {
                     ElementId = current.ElementId,
@@ -585,7 +597,7 @@ namespace Metamorphosis
                 // consolidate
                 var revitElem = makeRevitElemFromElement(e, true);
                
-                _currentElems.Add(e.Id.IntegerValue, revitElem);
+                _currentElems.Add(e.Id.AsLong(), revitElem);
 
               
                 
@@ -733,11 +745,16 @@ namespace Metamorphosis
                         if (_idValues.ContainsKey(entity_id) == false) _idValues[entity_id] = new RevitElement() { ElementId = entity_id };
 
                         _idValues[entity_id].ParameterValueIds[attribute_id] = value_id;
+
+                        // we don't want EDITED_BY to be considered?
+                        if (attribute_id == -1002067) continue;
+                        
                         _idValues[entity_id].Parameters[_parameterDict[attribute_id]] = _valueDict[value_id];
 
                     }
                 }
 
+            
 
                 /// read the ID information for each element.
                 cmd = conn.CreateCommand();
@@ -746,7 +763,7 @@ namespace Metamorphosis
                 {
                     while (reader.Read())
                     {
-                        int id = reader.GetInt32(0);
+                        long id = reader.GetInt64(0);
                         if (_idValues.ContainsKey(id) == false) _idValues[id] = new RevitElement() { ElementId = id };
                         string guid = reader.GetString(1);
                         string cat = reader.GetString(2);
@@ -779,7 +796,7 @@ namespace Metamorphosis
                 {
                     while (reader.Read())
                     {
-                        int entity_id = reader.GetInt32(0);
+                        long entity_id = reader.GetInt64(0);
 
                         if (_idValues.ContainsKey(entity_id) == false) continue; // not sure how, but let's protect just in case.
                         string bbMin = reader.GetString(1);
@@ -853,7 +870,7 @@ namespace Metamorphosis
            
             Category c = e.Category;
 
-            var revitElem = new RevitElement() { ElementId = e.Id.IntegerValue, Category = (c != null) ? c.Name : "(none)" };
+            var revitElem = new RevitElement() { ElementId = e.Id.AsLong(), Category = (c != null) ? c.Name : "(none)" };
 #if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020
                 // do nothing here
 #else
@@ -870,6 +887,8 @@ namespace Metamorphosis
                     {
                         if (p.Definition == null) continue; // we don't want this!
                         string definition = p.Definition.Name;
+
+                        
                         string val = null;
                         switch (p.StorageType)
                         {
@@ -922,8 +941,8 @@ namespace Metamorphosis
                         if (e is FamilyInstance)
                         {
                             // special cases.
-                            if ((e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Columns) ||
-                                (e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_StructuralColumns))
+                            if (e.Category.Id.IsCategory(BuiltInCategory.OST_Columns) ||
+                                e.Category.Id.IsCategory(BuiltInCategory.OST_StructuralColumns))
                             {
                                 // in this case, get the Z value from the 
                                 var offset = e.get_Parameter(BuiltInParameter.FAMILY_BASE_LEVEL_OFFSET_PARAM);

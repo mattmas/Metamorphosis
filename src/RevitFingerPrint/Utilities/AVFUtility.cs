@@ -247,7 +247,7 @@ namespace Metamorphosis.Utilities
                 
                 
 
-                if (pc.IntegerValue > 0)
+                if (pc.AsLong() > 0)
                 {
                     if (avf.AsElementId() != pc)
                     {
@@ -268,7 +268,7 @@ namespace Metamorphosis.Utilities
         private static bool testDocNeedsInitializing(Document doc)
         {
             // does it already exist?  look for the latest kind...
-            return (AnalysisDisplayStyle.FindByName(doc, "SolidView").IntegerValue < 0);
+            return (AnalysisDisplayStyle.FindByName(doc, "SolidView").AsLong() < 0);
         }
 
         private static void createAllStyles(Document doc)
@@ -282,8 +282,8 @@ namespace Metamorphosis.Utilities
             }
 
             // create the styles...
-            if (AnalysisDisplayStyle.FindByName(doc, "SolidView").IntegerValue < 0) createSolidDisplayStyle(doc, "SolidView");
-            if (AnalysisDisplayStyle.FindByName(doc, "VectorView").IntegerValue < 0) createVectorDisplayStyle(doc, "VectorView");
+            if (AnalysisDisplayStyle.FindByName(doc, "SolidView").AsLong() < 0) createSolidDisplayStyle(doc, "SolidView");
+            if (AnalysisDisplayStyle.FindByName(doc, "VectorView").AsLong() < 0) createVectorDisplayStyle(doc, "VectorView");
 
             if (t != null)
             {

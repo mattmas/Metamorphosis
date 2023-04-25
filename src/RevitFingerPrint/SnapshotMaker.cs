@@ -14,7 +14,7 @@ namespace Metamorphosis
     internal class SnapshotMaker
     {
         private Document _doc;
-        private Dictionary<int, Parameter> _paramDict = new Dictionary<int, Parameter>();
+        private Dictionary<long, Parameter> _paramDict = new Dictionary<long, Parameter>();
         private Dictionary<string, int> _valueDict = new Dictionary<string, int>();
         private Dictionary<string, string> _headerDict = new Dictionary<string, string>();
         private string _filename;
@@ -204,7 +204,7 @@ namespace Metamorphosis
                             string catName = (c != null) ? c.Name : "(none)";
                             if (catName.Contains("'")) catName = catName.Replace("'", "''");
                             var cmd = conn.CreateCommand();
-                            cmd.CommandText = String.Format("INSERT INTO _objects_id (id,external_id,category,isType,versionguid) VALUES({0},'{1}','{2}',{3},{4})", e.Id.IntegerValue, e.UniqueId, catName, (isTypes) ? 1 : 0, versionGuid);
+                            cmd.CommandText = String.Format("INSERT INTO _objects_id (id,external_id,category,isType,versionguid) VALUES({0},'{1}','{2}',{3},{4})", e.Id.AsLong(), e.UniqueId, catName, (isTypes) ? 1 : 0, versionGuid);
                             currentQuery = cmd.CommandText;
 
                             cmd.ExecuteNonQuery();
@@ -272,7 +272,18 @@ namespace Metamorphosis
                             string name = pair.Value.Definition.Name;
                             if (name.Contains("'")) name = name.Replace("'", "''");
                             var cmd = conn.CreateCommand();
-                            cmd.CommandText = String.Format("INSERT INTO _objects_attr (id,name,category,data_type) VALUES({0},'{1}','{2}',{3})", pair.Value.Id.IntegerValue, name, LabelUtils.GetLabelFor(pair.Value.Definition.ParameterGroup).Replace("'", "''"), (int)pair.Value.Definition.ParameterGroup);
+
+#if REVIT2015 || REVIT2016 || REVIT2017 || REVIT2018 || REVIT2019 || REVIT2020 || REVIT2021 || REVIT2022 || REVIT2023
+                            var group = LabelUtils.GetLabelFor(pair.Value.Definition.ParameterGroup).Replace("'", "''");
+                            // maybe we don't need? (int)pair.Value.Definition.ParameterGroup
+#else  // newer
+                            //var group = LabelUtils.GetLabelFor(pair.Value.Definition.ParameterGroup).Replace("'", "''");
+                            var groupForgeId = pair.Value.Definition.GetGroupTypeId();
+                            var group = LabelUtils.GetLabelForGroup(groupForgeId);
+                            // maybe we don't need the PArameterGroupId?
+
+#endif
+                            cmd.CommandText = String.Format("INSERT INTO _objects_attr (id,name,category,data_type) VALUES({0},'{1}','{2}',{3})", pair.Value.Id.AsLong(), name, group,-1 );
                             currentQuery = cmd.CommandText;
 
                             cmd.ExecuteNonQuery();
@@ -368,7 +379,7 @@ namespace Metamorphosis
 
 
                                 var cmd = conn.CreateCommand();
-                                cmd.CommandText = String.Format("INSERT INTO _objects_eav (entity_id,attribute_id,value_id) VALUES({0},{1},{2})", e.Id.IntegerValue, p.Id.IntegerValue, _valueDict[val]);
+                                cmd.CommandText = String.Format("INSERT INTO _objects_eav (entity_id,attribute_id,value_id) VALUES({0},{1},{2})", e.Id.AsLong(), p.Id.AsLong(), _valueDict[val]);
                                 currentQuery = cmd.CommandText;
 
                                 cmd.ExecuteNonQuery();
@@ -398,7 +409,7 @@ namespace Metamorphosis
                 foreach( Parameter p in parms )
                 {
                     if (p.Definition == null) continue; // ignore!
-                    if (_paramDict.ContainsKey(p.Id.IntegerValue) == false) _paramDict.Add(p.Id.IntegerValue, p);
+                    if (_paramDict.ContainsKey(p.Id.AsLong()) == false) _paramDict.Add(p.Id.AsLong(), p);
                 }                                
             }
         }
@@ -444,8 +455,8 @@ namespace Metamorphosis
 
                                     XYZ pt1 = pt.Point;
                                     // special cases.
-                                    if ((e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_Columns) ||
-                                        (e.Category.Id.IntegerValue == (int)BuiltInCategory.OST_StructuralColumns))
+                                    if (e.Category.Id.IsCategory(BuiltInCategory.OST_Columns) ||
+                                        e.Category.Id.IsCategory(BuiltInCategory.OST_StructuralColumns))
                                     {
                                         // in this case, get the Z value from the 
                                         var offset = e.get_Parameter(BuiltInParameter.FAMILY_BASE_LEVEL_OFFSET_PARAM);
@@ -518,7 +529,7 @@ namespace Metamorphosis
                         if (lev != null) levName = lev.Name;
 
                             var cmd = conn.CreateCommand();
-                        cmd.CommandText = String.Format("INSERT INTO _objects_geom (id,BoundingBoxMin,BoundingBoxMax,Location,Location2,Level,Rotation) VALUES({0},'{1}','{2}','{3}','{4}','{5}',{6})", e.Id.IntegerValue, bbMin, bbMax, lp, lp2, escapeQuote(levName), rotation.ToString(CultureInfo.InvariantCulture));
+                        cmd.CommandText = String.Format("INSERT INTO _objects_geom (id,BoundingBoxMin,BoundingBoxMax,Location,Location2,Level,Rotation) VALUES({0},'{1}','{2}','{3}','{4}','{5}',{6})", e.Id.AsLong(), bbMin, bbMax, lp, lp2, escapeQuote(levName), rotation.ToString(CultureInfo.InvariantCulture));
 
                         if (_logLevel == Utilities.Settings.LogLevel.Verbose) _doc.Application.WriteJournalComment(cmd.CommandText,false);
 

@@ -9,7 +9,7 @@ namespace Metamorphosis.Objects
 {
     public class RevitElement
     {
-        public int ElementId { get; set; }
+        public long ElementId { get; set; }
 
         public String UniqueId { get; set; }
         public string Category { get; set; }

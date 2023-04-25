@@ -13,7 +13,7 @@ namespace Metamorphosis.Objects
     {
         public enum ChangeTypeEnum { ParameterChange, Move, Rotate, GeometryChange, NewElement, DeletedElement }
         #region Properties
-        public int ElementId { get; set; }
+        public long ElementId { get; set; }
 
         public string UniqueId { get; set; }
 
