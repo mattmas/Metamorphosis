@@ -1,0 +1,13 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/src/FilesToSign.txt
+/src/SignWithAzure.Bat
+/src/SignInstallerWithAzure.Bat
+*.vsidx
+*.wsuo
+/.vs/Metamorphosis/v17/DocumentLayout.json
+/.vs/ProjectSettings.json
+/.vs/slnx.sqlite
+/.vs/VSWorkspaceState.json
