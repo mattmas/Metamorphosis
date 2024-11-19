@@ -135,6 +135,7 @@
     <Compile Include="Product.wxs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="MetamorphosisCore.addin" />
     <Content Include="Metamorphosis.addin" />
   </ItemGroup>
   <Import Project="$(WixTargetsPath)" />

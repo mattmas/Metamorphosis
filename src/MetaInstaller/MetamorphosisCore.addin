@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>Revit Metamorphosis</Name>
+    <Assembly>.\Metamorphosis\MetamorphosisCore.dll</Assembly>
+    <AddInId>3d647582-3529-4cfe-a977-00ce3dd86b7a</AddInId>
+    <FullClassName>Metamorphosis.ExternalApp</FullClassName>
+    <VendorId>HACK</VendorId>
+    <VendorDescription>Team 14: Metamorphosis - NY AEC Hackathon, 12/2016</VendorDescription>
+  </AddIn>
+</RevitAddIns>

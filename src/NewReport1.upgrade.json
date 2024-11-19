@@ -1,0 +1,180 @@
+{
+  "settings": {
+    "components": {
+      "code": true,
+      "binaries": true
+    },
+    "targetId": "",
+    "targetDisplayName": ".NET 8.0"
+  },
+  "analysisStartTime": "2024-04-15T09:56:21.2080788Z",
+  "analysisEndTime": "2024-04-15T09:56:23.9859635Z",
+  "stats": {
+    "summary": {
+      "projects": 1,
+      "issues": 5,
+      "incidents": 6,
+      "effort": 6
+    },
+    "charts": {
+      "severity": {
+        "Mandatory": 3,
+        "Optional": 1,
+        "Potential": 2,
+        "Information": 0
+      },
+      "category": {
+        "NuGet": 4,
+        "Project": 2
+      }
+    }
+  },
+  "projects": [
+    {
+      "path": "C:\\Users\\mmason\\Source\\Repos\\mattmas\\Metamorphosis\\src\\RevitFingerPrint\\Metamorphosis.csproj",
+      "startingProject": true,
+      "issues": 5,
+      "storyPoints": 6,
+      "ruleInstances": [
+        {
+          "incidentId": "ea73ca21-05eb-4d0e-a3cf-77ecf71e8c31",
+          "ruleId": "NuGet.0002",
+          "projectPath": "C:\\Users\\mmason\\Source\\Repos\\mattmas\\Metamorphosis\\src\\RevitFingerPrint\\Metamorphosis.csproj",
+          "state": "Active",
+          "location": {
+            "kind": "Package",
+            "path": "EntityFramework, 6.0.0",
+            "snippet": "EntityFramework, 6.0.0\n\nRecommendation:\n\nEntityFramework 6.4.4"
+          }
+        },
+        {
+          "incidentId": "c44c20cb-a180-40e7-9fb9-d0b53ae13be0",
+          "ruleId": "NuGet.0002",
+          "projectPath": "C:\\Users\\mmason\\Source\\Repos\\mattmas\\Metamorphosis\\src\\RevitFingerPrint\\Metamorphosis.csproj",
+          "state": "Active",
+          "location": {
+            "kind": "Package",
+            "path": "Newtonsoft.Json, 9.0.1",
+            "snippet": "Newtonsoft.Json, 9.0.1\n\nRecommendation:\n\nNewtonsoft.Json 13.0.3"
+          }
+        },
+        {
+          "incidentId": "0bca3cc1-c7bd-4552-962d-1014cc72d6b0",
+          "ruleId": "NuGet.0001",
+          "projectPath": "C:\\Users\\mmason\\Source\\Repos\\mattmas\\Metamorphosis\\src\\RevitFingerPrint\\Metamorphosis.csproj",
+          "state": "Active",
+          "location": {
+            "kind": "Package",
+            "path": "System.Data.SQLite.Core, 1.0.103",
+            "snippet": "System.Data.SQLite.Core, 1.0.103\n\nRecommendation:\n\nSystem.Data.SQLite.Core, 1.0.118"
+          }
+        },
+        {
+          "incidentId": "3fbe81ba-e5a1-44ac-a2cc-6ee46edca4cb",
+          "ruleId": "NuGet.0004",
+          "projectPath": "C:\\Users\\mmason\\Source\\Repos\\mattmas\\Metamorphosis\\src\\RevitFingerPrint\\Metamorphosis.csproj",
+          "state": "Active",
+          "location": {
+            "kind": "Package",
+            "path": "Newtonsoft.Json, 9.0.1",
+            "snippet": "Newtonsoft.Json, 9.0.1",
+            "links": [
+              {
+                "title": "https://github.com/advisories/GHSA-5crp-9r3c-p9vr",
+                "url": "https://github.com/advisories/GHSA-5crp-9r3c-p9vr"
+              }
+            ]
+          }
+        },
+        {
+          "incidentId": "af57b472-1f6c-4cde-9cb4-0a94f8c196a5",
+          "ruleId": "Project.0001",
+          "projectPath": "C:\\Users\\mmason\\Source\\Repos\\mattmas\\Metamorphosis\\src\\RevitFingerPrint\\Metamorphosis.csproj",
+          "state": "Active",
+          "location": {
+            "kind": "File",
+            "path": "C:\\Users\\mmason\\Source\\Repos\\mattmas\\Metamorphosis\\src\\RevitFingerPrint\\Metamorphosis.csproj"
+          }
+        },
+        {
+          "incidentId": "e8abd934-bf58-4287-92a4-6d5c2b78b8a5",
+          "ruleId": "Project.0002",
+          "projectPath": "C:\\Users\\mmason\\Source\\Repos\\mattmas\\Metamorphosis\\src\\RevitFingerPrint\\Metamorphosis.csproj",
+          "state": "Active",
+          "location": {
+            "kind": "File",
+            "path": "C:\\Users\\mmason\\Source\\Repos\\mattmas\\Metamorphosis\\src\\RevitFingerPrint\\Metamorphosis.csproj",
+            "snippet": "Current: .NETFramework,Version=v4.8\nNew: net8.0"
+          }
+        }
+      ]
+    }
+  ],
+  "rules": {
+    "NuGet.0002": {
+      "id": "NuGet.0002",
+      "description": "NuGet package upgrade is recommended for selected target framework.\n\nStandard .NET packages are recommended to have versions matching version of .NET that project targets.\n\nSome other packages also are known to work better for selected target frameworks.",
+      "label": "NuGet package upgrade is recommended",
+      "severity": "Potential",
+      "effort": 1,
+      "links": [
+        {
+          "url": "https://go.microsoft.com/fwlink/?linkid=2262530"
+        }
+      ]
+    },
+    "NuGet.0001": {
+      "id": "NuGet.0001",
+      "description": "NuGet package is incompatible with selected target framework.\n\nPackage needs to be upgraded to a version supporting selected project target framework. If there no new package versions supporting new target framework, different package needs to be used and all code needs to be upgraded to new API.",
+      "label": "NuGet package is incompatible",
+      "severity": "Mandatory",
+      "effort": 1,
+      "links": [
+        {
+          "url": "https://go.microsoft.com/fwlink/?linkid=2262529"
+        }
+      ]
+    },
+    "NuGet.0004": {
+      "id": "NuGet.0004",
+      "description": "NuGet package contains secutiry vulnerabilities.\n\nPackage needs to be upgraded to a newer version that addresses known secutity vunerabilities.",
+      "label": "NuGet package contains secutiry vulnerability",
+      "severity": "Optional",
+      "effort": 1
+    },
+    "Project.0001": {
+      "id": "Project.0001",
+      "description": "Project file needs to be converted to SDK style. Modern .NET framework projects require a change in the project file format and use SDK corresponding to project flavor and functionality.",
+      "label": "Project file needs to be converted to SDK style",
+      "severity": "Mandatory",
+      "effort": 1,
+      "links": [
+        {
+          "title": "Overview of porting from .NET Framework to .NET",
+          "url": "https://go.microsoft.com/fwlink/?linkid=2265227"
+        },
+        {
+          "title": ".NET project SDKs",
+          "url": "https://go.microsoft.com/fwlink/?linkid=2265226"
+        }
+      ]
+    },
+    "Project.0002": {
+      "id": "Project.0002",
+      "description": "Project\u0027s target framework(s) needs to be changed to the new target framework that you selected for this upgrade.\n\nDuring upgrade target framework will be adjusted to correspinding platform when applicable. In some cases project would result in multiple target frameworks after the upgrade if it was using features that now have their own platforms in moderrn .NET frameworks (windows, iOS, Android etc).",
+      "label": "Project\u0027s target framework(s) needs to be changed",
+      "severity": "Mandatory",
+      "effort": 1,
+      "links": [
+        {
+          "title": "Overview of porting from .NET Framework to .NET",
+          "url": "https://go.microsoft.com/fwlink/?linkid=2265227"
+        },
+        {
+          "title": ".NET project SDKs",
+          "url": "https://go.microsoft.com/fwlink/?linkid=2265226"
+        }
+      ]
+    }
+  }
+}

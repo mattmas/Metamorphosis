@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "MetamorphosisCore": {
+      "commandName": "Project"
+    },
+    "Revit2025": {
+      "commandName": "Executable",
+      "executablePath": "c:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe"
+    }
+  }
+}

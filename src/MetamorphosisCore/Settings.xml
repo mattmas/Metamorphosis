@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Settings>
+  <!-- Control what amount of change in position or angle represents a 'real' change.
+       Length units specified in DECIMAL FEET, Angles in RADIANS -->
+  <Tolerance length="0.0006" angle="0.0349"/>
+<ColorChoices>
+  <!-- Specify the ChangeType, and then the color. The color is in the format of either:
+    - the .NET Color name (https://msdn.microsoft.com/en-us/library/system.drawing.color(v=vs.110).aspx) 
+    - three comma delimited integers:  Red,Greed,Blue
+  -->
+  <ChangeType name="ParameterChange" color="Red"/>
+  <ChangeType name="Move" color="Red"/>
+  <ChangeType name="Rotate" color="Red"/>
+  <ChangeType name="GeometryChange" color="Blue"/>
+  <ChangeType name="NewElement" color="Green"/>
+</ColorChoices>
+  <DefaultSelection></DefaultSelection>
+  <!-- Loglevel: Basic or Verbose -->
+  <LogLevel>Basic</LogLevel>
+  <!-- The UseVersionGUID (for 2021+) will be faster, because it uses each elements EpisodeGUID to determine if a change was made.
+  However - it does seem that this is not perfect- some parameter changes do not trigger an Episode change? so OFF by default -->
+  <UseVersionGuid>False</UseVersionGuid>
+</Settings>

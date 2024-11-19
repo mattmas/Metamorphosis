@@ -1,0 +1,10 @@
+﻿CREATE TABLE "_objects_header"("id" INTEGER PRIMARY KEY,"keyword" TEXT, "value" BLOB);
+CREATE TABLE "_objects_attr"("id" INTEGER,"name" TEXT,"category" TEXT,"data_type" INTEGER,"data_type_context" TEXT,"description" TEXT,"display_name" TEXT,"flags" INTEGER, UNIQUE("name","category","data_type","data_type_context","description","display_name","flags"));
+CREATE TABLE "_objects_eav"("id" INTEGER PRIMARY KEY,"entity_id" INTEGER,"attribute_id" INTEGER,"value_id" INTEGER);
+CREATE TABLE "_objects_ercv"("id" INTEGER PRIMARY KEY,"entity_id" INTEGER,"row_id" INTEGER,"column_id" INTEGER,"value_id" INTEGER);
+CREATE TABLE "_objects_id"("id" INTEGER,"external_id" BLOB,"viewable_id" BLOB,"category" TEXT,"isType" INTEGER,"versionguid" TEXT);
+CREATE TABLE "_objects_val"("id" INTEGER,"value" BLOB UNIQUE);
+CREATE TABLE "_objects_geom"("id" INTEGER,"BoundingBoxMin" BLOB,"BoundingBoxMax" BLOB,"Location" BLOB, "Location2" BLOB, "Level" BLOB, "Rotation" FLOAT);
+CREATE INDEX "_objects_eav_idx_entity_id" on "_objects_eav" (entity_id);
+CREATE INDEX "_objects_ercv_idx_entity_id" on "_objects_ercv" (entity_id);
+CREATE INDEX "_objects_ercv_idx_entity_id_row_id_column_id" on "_objects_ercv" (entity_id, row_id, column_id);
